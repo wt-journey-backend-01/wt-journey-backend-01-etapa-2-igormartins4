@@ -66,11 +66,15 @@ function createCaso(req, res) {
   const { id, titulo, descricao, status, agente_id } = req.body;
   const errors = [];
   // validações existentes...
-  
+
   // Validação do agente_id
   const agenteExiste = findAgenteById(agente_id);
   if (!agenteExiste) {
-    return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+    return errorResponse(
+      res,
+      404,
+      "Agente não encontrado para o agente_id fornecido",
+    );
   }
 
   if (errors.length)
@@ -147,14 +151,18 @@ function getAllAgentes(req, res) {
 
   if (dataDeIncorporacao) {
     agentes = agentes.filter(
-      (a) => a.dataDeIncorporacao === dataDeIncorporacao
+      (a) => a.dataDeIncorporacao === dataDeIncorporacao,
     );
   }
 
   if (sort === "asc") {
-    agentes.sort((a, b) => a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao));
+    agentes.sort((a, b) =>
+      a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao),
+    );
   } else if (sort === "desc") {
-    agentes.sort((a, b) => b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao));
+    agentes.sort((a, b) =>
+      b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao),
+    );
   }
 
   res.json(agentes);
@@ -209,16 +217,16 @@ Assim, o Git vai ignorar essa pasta, o que é uma boa prática.
 ## 💡 Dicas gerais para seu aprendizado
 
 - Continue estudando a arquitetura MVC para APIs RESTful, pois ela é essencial para organizar projetos Node.js de forma profissional:  
-https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH
+  https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH
 
 - Reforce o entendimento sobre os métodos HTTP e os status codes corretos para cada operação:  
-https://youtu.be/RSZHvQomeKE
+  https://youtu.be/RSZHvQomeKE
 
 - Aprenda a manipular arrays com métodos como `.filter()`, `.find()`, `.map()`, pois eles são a base para trabalhar com dados em memória:  
-https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI
+  https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI
 
 - Para validação de dados e tratamento de erros, esse vídeo vai ajudar bastante:  
-https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
+  https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
 
 ---
 
@@ -241,7 +249,6 @@ Um grande abraço e bons códigos! 👊✨
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
-
-
 ---
+
 <sup>Made By the Autograder Team.</sup><br>&nbsp;&nbsp;&nbsp;&nbsp;<sup><sup>- [Arthur Carvalho](https://github.com/ArthurCRodrigues)</sup></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;<sup><sup>- [Arthur Drumond](https://github.com/drumondpucminas)</sup></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;<sup><sup>- [Gabriel Resende](https://github.com/gnvr29)</sup></sup>

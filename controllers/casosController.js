@@ -1,4 +1,3 @@
-
 import {
   findAll,
   findById,
@@ -10,7 +9,6 @@ import { findById as findAgenteById } from "../repositories/agentesRepository.js
 import { errorResponse } from "../utils/errorHandler.js";
 import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 
-
 function getAllCasos(req, res) {
   let casos = findAll();
   const { agente_id, status, q } = req.query;
@@ -18,11 +16,10 @@ function getAllCasos(req, res) {
   if (status) casos = casos.filter((c) => c.status === status);
   if (q)
     casos = casos.filter(
-      (c) => c.titulo.includes(q) || c.descricao.includes(q)
+      (c) => c.titulo.includes(q) || c.descricao.includes(q),
     );
   res.json(casos);
 }
-
 
 function getCasoById(req, res) {
   const { id } = req.params;
@@ -33,7 +30,6 @@ function getCasoById(req, res) {
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
   res.json(caso);
 }
-
 
 function createCaso(req, res) {
   const { titulo, descricao, status, agente_id } = req.body;
@@ -51,7 +47,9 @@ function createCaso(req, res) {
   if (agente_id && uuidValidate(agente_id)) {
     const agenteExiste = findAgenteById(agente_id);
     if (!agenteExiste) {
-      errors.push({ agente_id: "Agente não encontrado para o agente_id fornecido" });
+      errors.push({
+        agente_id: "Agente não encontrado para o agente_id fornecido",
+      });
     }
   }
   if (errors.length)
@@ -61,7 +59,6 @@ function createCaso(req, res) {
   create(caso);
   res.status(201).json(caso);
 }
-
 
 function updateCaso(req, res) {
   const { id } = req.params;
@@ -78,7 +75,11 @@ function updateCaso(req, res) {
   }
   const agenteExiste = findAgenteById(agente_id);
   if (!agenteExiste) {
-    return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+    return errorResponse(
+      res,
+      404,
+      "Agente não encontrado para o agente_id fornecido",
+    );
   }
   caso.titulo = titulo;
   caso.descricao = descricao;
@@ -87,7 +88,6 @@ function updateCaso(req, res) {
   update(id, caso);
   res.json(caso);
 }
-
 
 function patchCaso(req, res) {
   const { id } = req.params;
@@ -106,14 +106,17 @@ function patchCaso(req, res) {
     }
     const agenteExiste = findAgenteById(agente_id);
     if (!agenteExiste) {
-      return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+      return errorResponse(
+        res,
+        404,
+        "Agente não encontrado para o agente_id fornecido",
+      );
     }
     caso.agente_id = agente_id;
   }
   update(id, caso);
   res.json(caso);
 }
-
 
 function deleteCasoController(req, res) {
   const { id } = req.params;
@@ -124,7 +127,6 @@ function deleteCasoController(req, res) {
   if (!deleted) return errorResponse(res, 404, "Caso não encontrado");
   res.status(204).send();
 }
-
 
 function getAgenteDoCaso(req, res) {
   const { caso_id } = req.params;

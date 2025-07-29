@@ -1,4 +1,3 @@
-
 import {
   findAll,
   findById,
@@ -9,21 +8,25 @@ import {
 import { errorResponse } from "../utils/errorHandler.js";
 import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 
-
 function getAllAgentes(req, res) {
   let agentes = findAll();
   const { dataDeIncorporacao, sort } = req.query;
   if (dataDeIncorporacao) {
-    agentes = agentes.filter(a => a.dataDeIncorporacao === dataDeIncorporacao);
+    agentes = agentes.filter(
+      (a) => a.dataDeIncorporacao === dataDeIncorporacao,
+    );
   }
   if (sort === "asc") {
-    agentes.sort((a, b) => a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao));
+    agentes.sort((a, b) =>
+      a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao),
+    );
   } else if (sort === "desc") {
-    agentes.sort((a, b) => b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao));
+    agentes.sort((a, b) =>
+      b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao),
+    );
   }
   res.json(agentes);
 }
-
 
 function getAgenteById(req, res) {
   const { id } = req.params;
@@ -36,7 +39,6 @@ function getAgenteById(req, res) {
   }
   res.json(agente);
 }
-
 
 function createAgente(req, res) {
   const { nome, dataDeIncorporacao, cargo } = req.body;
@@ -56,7 +58,6 @@ function createAgente(req, res) {
   res.status(201).json(agente);
 }
 
-
 function updateAgente(req, res) {
   const { id } = req.params;
   if (!uuidValidate(id)) {
@@ -74,7 +75,6 @@ function updateAgente(req, res) {
   res.json(agente);
 }
 
-
 function patchAgente(req, res) {
   const { id } = req.params;
   if (!uuidValidate(id)) {
@@ -90,7 +90,6 @@ function patchAgente(req, res) {
   update(id, agente);
   res.json(agente);
 }
-
 
 function deleteAgenteController(req, res) {
   const { id } = req.params;
