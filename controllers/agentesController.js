@@ -10,7 +10,12 @@ import { v4 as uuidv4, validate as uuidValidate } from "uuid";
 
 function getAllAgentes(req, res) {
   let agentes = findAll();
-  const { dataDeIncorporacao, sort } = req.query;
+  const { dataDeIncorporacao, sort, cargo } = req.query;
+  if (cargo) {
+    agentes = agentes.filter(
+      (agente) => agente.cargo.toLowerCase() === cargo.toLowerCase()
+    );
+  }
   if (dataDeIncorporacao) {
     agentes = agentes.filter(
       (a) => new Date(a.dataDeIncorporacao) >= new Date(dataDeIncorporacao)

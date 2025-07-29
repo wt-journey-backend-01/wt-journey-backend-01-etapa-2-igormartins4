@@ -38,15 +38,28 @@ function getCasoById(req, res) {
 function createCaso(req, res) {
   const { titulo, descricao, status, agente_id } = req.body;
   const errors = [];
-  if (!titulo) errors.push({ titulo: "Campo 'titulo' é obrigatório" });
-  if (!descricao) errors.push({ descricao: "Campo 'descricao' é obrigatório" });
+  if (!titulo)
+    errors.push({ field: "titulo", message: "Campo 'titulo' é obrigatório" });
+  if (!descricao)
+    errors.push({
+      field: "descricao",
+      message: "Campo 'descricao' é obrigatório",
+    });
   if (!status || !["aberto", "solucionado"].includes(status))
     errors.push({
-      status: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'",
+      field: "status",
+      message: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'",
     });
-  if (!agente_id) errors.push({ agente_id: "Campo 'agente_id' é obrigatório" });
+  if (!agente_id)
+    errors.push({
+      field: "agente_id",
+      message: "Campo 'agente_id' é obrigatório",
+    });
   if (agente_id && !uuidValidate(agente_id)) {
-    errors.push({ agente_id: "agente_id deve ser um UUID válido" });
+    errors.push({
+      field: "agente_id",
+      message: "agente_id deve ser um UUID válido",
+    });
   }
   if (errors.length) {
     return errorResponse(res, 400, "Parâmetros inválidos", errors);
