@@ -39,8 +39,8 @@ import casosController from "../controllers/casosController.js";
  *             schema:
  *               $ref: '#/components/schemas/Caso'
  */
-router.get("/casos", casosController.getAllCasos);
-router.post("/casos", casosController.createCaso);
+router.get("/", casosController.getAllCasos);
+router.post("/", casosController.createCaso);
 /**
  * @swagger
  * /casos/{id}:
@@ -142,6 +142,7 @@ router.post("/casos", casosController.createCaso);
  *               $ref: '#/components/schemas/Agente'
  *       404:
  *         description: Caso ou agente não encontrado
+ */
  
 /**
  * @swagger
@@ -187,10 +188,10 @@ router.post("/casos", casosController.createCaso);
  *           example: "c2b7e7e2-8c2e-4b7a-9c2e-abcdef123456"
  */
 
-router.get("/casos/:id", casosController.getCasoById);
-router.put("/casos/:id", casosController.updateCaso);
-router.patch("/casos/:id", casosController.patchCaso);
-router.delete("/casos/:id", casosController.deleteCaso);
-router.get("/casos/:id/agente", casosController.getAgenteDoCaso);
+router.get("/:id", casosController.getCasoById);
+router.put("/:id", casosController.updateCaso);
+router.patch("/:id", casosController.patchCaso);
+router.delete("/:id", casosController.deleteCaso);
+router.get("/:id/agente", casosController.getAgenteDoCaso);
 
 export default router;

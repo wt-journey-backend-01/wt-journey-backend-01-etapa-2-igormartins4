@@ -13,7 +13,7 @@ function getAllAgentes(req, res) {
   const { dataDeIncorporacao, sort } = req.query;
   if (dataDeIncorporacao) {
     agentes = agentes.filter(
-      (a) => a.dataDeIncorporacao === dataDeIncorporacao
+      (a) => new Date(a.dataDeIncorporacao) >= new Date(dataDeIncorporacao)
     );
   }
   if (sort === "asc") {

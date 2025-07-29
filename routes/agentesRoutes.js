@@ -25,11 +25,11 @@ import agentesController from "../controllers/agentesController.js";
  *         description: Agente criado
  */
 
-router.get("/agentes", agentesController.getAllAgentes);
-router.post("/agentes", agentesController.createAgente);
-router.get("/agentes/:id", agentesController.getAgenteById);
-router.put("/agentes/:id", agentesController.updateAgente);
-router.patch("/agentes/:id", agentesController.patchAgente);
-router.delete("/agentes/:id", agentesController.deleteAgente);
+router.get("/", agentesController.getAllAgentes);
+router.post("/", agentesController.createAgente);
+router.get("/:id", agentesController.getAgenteById);
+router.put("/:id", agentesController.updateAgente);
+router.patch("/:id", agentesController.patchAgente);
+router.delete("/:id", agentesController.deleteAgente);
 
 export default router;

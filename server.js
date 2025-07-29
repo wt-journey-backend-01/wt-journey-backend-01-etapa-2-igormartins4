@@ -19,8 +19,8 @@ app.get("/", (req, res) => {
 });
 
 setupSwagger(app);
-app.use(agentesRouter);
-app.use(casosRouter);
+app.use("/agentes", agentesRouter);
+app.use("/casos", casosRouter);
 
 app.listen(PORT, () => {
   console.log(
