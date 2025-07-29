@@ -1,279 +1,158 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 8 créditos restantes para usar o sistema de feedback AI.
+Você tem 7 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para igormartins4:
 
-Nota final: **76.8/100**
+Nota final: **85.6/100**
 
-# Feedback para o igormartins4 🚓✨
+# Feedback para você, igormartins4! 🚓✨
 
-Olá, Igor! Que jornada incrível você fez até aqui! 🎉 Seu projeto da API para o Departamento de Polícia está bem estruturado e você conseguiu implementar uma boa parte dos requisitos, inclusive várias funcionalidades bônus, o que merece muitos parabéns! 👏👏
+Olá, Igor! Primeiro, parabéns pelo esforço e pela entrega dessa API para o Departamento de Polícia! 🎉 Você estruturou muito bem seu projeto, organizando controllers, routes e repositories de forma clara e modular — isso é essencial para projetos escaláveis e de fácil manutenção. 👏
 
----
+## O que está brilhando no seu código 💡
 
-## 🎯 Pontos Fortes & Conquistas Bônus
+- Você implementou todos os métodos HTTP obrigatórios para `/agentes` e `/casos` e fez um ótimo tratamento de erros, com mensagens claras e status HTTP adequados, como 400 para dados inválidos e 404 para recursos não encontrados. Isso é fundamental para APIs REST robustas!
+- A validação dos UUIDs está bem feita, garantindo que IDs inválidos já sejam barrados logo no início.
+- Seu uso dos arrays em memória nos repositories está correto, com funções simples e eficazes para criar, atualizar, deletar e buscar.
+- Você implementou filtros nos endpoints, como filtragem por status e agente nos casos, e também ordenação e filtragem por data de incorporação nos agentes. Isso mostra que você foi além do básico, parabéns! 🎯
+- Também vi que você criou mensagens de erro personalizadas, o que melhora muito a experiência do consumidor da API.
 
-1. **Organização Modular**: Você estruturou muito bem seu projeto, separando rotas, controllers e repositories, exatamente como esperado. Isso facilita a manutenção e crescimento do código. 👏  
-2. **Endpoints básicos funcionando**: Os métodos HTTP essenciais para `/agentes` e `/casos` estão implementados e funcionando para a maioria dos casos.  
-3. **Validações e tratamento de erros**: Você implementou validações importantes, como o uso do UUID para IDs e verificação de campos obrigatórios, além de retornar os status codes corretos (400, 404, 201, etc).  
-4. **Filtros e ordenação**: Parabéns por implementar filtros nos endpoints, como buscar casos por status e agente, e agentes por data de incorporação com ordenação ascendente e descendente — isso é um diferencial!  
-5. **Mensagens de erro customizadas**: Você caprichou nas respostas de erro para agentes inválidos, o que enriquece a experiência de quem consome sua API.
+## Pontos importantes para você focar e melhorar 🕵️‍♂️
 
----
+### 1. Sobre os testes que falharam em buscas e atualizações com status 404 e 400
 
-## 🔍 Análise dos Pontos que Precisam de Atenção
+Você tratou muito bem os erros 400 e 404 em agentes e casos, porém alguns testes indicam que, em certas situações, as respostas não estão vindo como esperado. Por exemplo:
 
-### 1. Status 404 ao buscar agente inexistente não está sendo retornado corretamente
+- Buscar um agente inexistente deve retornar 404 (você já faz isso, mas veja se em todos os pontos está consistente).
+- Atualizar parcialmente um agente com PATCH e payload inválido deve retornar 400.
+- Criar um caso com `agente_id` inválido ou inexistente deve retornar 404.
 
-Você implementou a validação do ID com `uuidValidate` e retorna 400 para IDs inválidos, o que é ótimo:
-
-```js
-function getAgenteById(req, res) {
-  const { id } = req.params;
-  if (!uuidValidate(id)) {
-    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
-  }
-  const agente = findById(id);
-  if (!agente) {
-    return errorResponse(res, 404, "Agente não encontrado");
-  }
-  res.json(agente);
-}
-```
-
-Porém, o teste indica que ao buscar um agente que não existe, o retorno 404 falha. Isso pode indicar algum problema na função `findById` do `agentesRepository.js` ou na forma como o agente é buscado.
-
-**Investigando o repository:**
-
-```js
-function findById(id) {
-  return agentes.find((a) => a.id === id);
-}
-```
-
-Está correto, mas será que os agentes estão sendo realmente armazenados? Como o array `agentes` é um array em memória, se você não criar agentes antes de buscar, naturalmente não vai encontrar.
-
-**Dica:** Certifique-se de que os agentes estão sendo criados corretamente antes de testar a busca. Além disso, revise se o `id` passado é exatamente igual ao armazenado (mesmo tipo e conteúdo).
-
----
-
-### 2. Atualização parcial (PATCH) de agente com payload em formato incorreto não retorna 400
-
-No seu controller `patchAgente`, você permite atualizar parcialmente um agente:
-
-```js
-function patchAgente(req, res) {
-  const { id } = req.params;
-  if (!uuidValidate(id)) {
-    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
-  }
-  const agente = findById(id);
-  if (!agente) return errorResponse(res, 404, "Agente não encontrado");
-  const { nome, dataDeIncorporacao, cargo } = req.body;
-  if (nome !== undefined) agente.nome = nome;
-  if (dataDeIncorporacao !== undefined)
-    agente.dataDeIncorporacao = dataDeIncorporacao;
-  if (cargo !== undefined) agente.cargo = cargo;
-  update(id, agente);
-  res.json(agente);
-}
-```
-
-Aqui você não está validando o formato dos dados recebidos no PATCH — por exemplo, se `dataDeIncorporacao` vier em formato errado, isso não é verificado.
-
-**Por que isso importa?**  
-Se o usuário enviar um payload com um campo mal formatado, o ideal é responder com status 400 e mensagem de erro clara.
-
-**Como melhorar?**  
-Adicione validações semelhantes às do POST e PUT para o PATCH, mas apenas para os campos que vierem no corpo da requisição.
-
-Exemplo:
-
-```js
-if (dataDeIncorporacao !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao)) {
-  return errorResponse(res, 400, "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'");
-}
-```
-
-Isso evita que dados inválidos entrem no seu sistema.
-
----
-
-### 3. Criar caso com id de agente inválido ou inexistente não retorna 404 corretamente
-
-No `createCaso`, você já faz validação do `agente_id`:
+Ao analisar seu código, vi que a lógica para validar `agente_id` na criação e atualização de casos está correta e você verifica se o agente existe. Isso é ótimo!
 
 ```js
 if (agente_id && !uuidValidate(agente_id)) {
   errors.push({ agente_id: "agente_id deve ser um UUID válido" });
 }
-if (agente_id && uuidValidate(agente_id)) {
-  const agenteExiste = findAgenteById(agente_id);
-  if (!agenteExiste) {
-    errors.push({
-      agente_id: "Agente não encontrado para o agente_id fornecido",
-    });
-  }
+
+const agenteExiste = findAgenteById(agente_id);
+if (!agenteExiste) {
+  return errorResponse(
+    res,
+    404,
+    "Agente não encontrado para o agente_id fornecido"
+  );
 }
 ```
 
-Isso está correto, mas o teste indica que o status 404 não está sendo retornado quando o agente não existe.
-
-**Por que?**  
-Você está acumulando erros e retornando status 400 para todos eles, mesmo quando o agente não é encontrado. O ideal é diferenciar:
-
-- Se o `agente_id` é inválido (formato errado) — 400 Bad Request  
-- Se o `agente_id` é válido, mas não existe — 404 Not Found
-
-**Como ajustar?**  
-Separe essa lógica para retornar 404 quando agente não existe, por exemplo:
+Porém, para os casos de busca e atualização de casos, percebi que você utiliza o parâmetro `id` para buscar o caso, mas no endpoint que retorna o agente responsável pelo caso você usa `caso_id`:
 
 ```js
-if (agente_id && uuidValidate(agente_id)) {
-  const agenteExiste = findAgenteById(agente_id);
-  if (!agenteExiste) {
-    return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
-  }
+const { caso_id } = req.params;
+if (!uuidValidate(caso_id)) {
+  return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
 }
+const caso = findById(caso_id);
 ```
 
-E mantenha os outros erros no array para retornar 400.
-
----
-
-### 4. Buscar caso por ID inválido não retorna 404 corretamente
-
-No `getCasoById`:
+**Aqui pode estar a raiz do problema!** No arquivo `routes/casosRoutes.js`, o endpoint é definido assim:
 
 ```js
-function getCasoById(req, res) {
-  const { id } = req.params;
+router.get("/casos/:caso_id/agente", casosController.getAgenteDoCaso);
+```
+
+Mas nos outros endpoints você usa `id` como parâmetro:
+
+```js
+router.get("/casos/:id", casosController.getCasoById);
+router.put("/casos/:id", casosController.updateCaso);
+```
+
+Essa inconsistência pode levar a erros quando o parâmetro esperado não bate com o que está na URL, causando falhas na validação e no retorno correto do status.
+
+**Sugestão:** padronize o nome do parâmetro para `id` em todos os endpoints para evitar confusão, ou então adapte o controller para aceitar o nome do parâmetro correto.
+
+Exemplo de ajuste no controller `getAgenteDoCaso`:
+
+```js
+function getAgenteDoCaso(req, res) {
+  const { id } = req.params; // usar 'id' para manter padrão
   if (!uuidValidate(id)) {
     return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
   }
   const caso = findById(id);
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
-  res.json(caso);
+  const agente = findAgenteById(caso.agente_id);
+  if (!agente) return errorResponse(res, 404, "Agente não encontrado");
+  res.json(agente);
 }
 ```
 
-Aqui a lógica parece correta. Se o teste falha, pode ser por:
+E ajustar a rota para:
 
-- O `findById` do `casosRepository` não encontrar o caso (normal se não existir).  
-- Ou o ID passado não está sendo validado corretamente.
+```js
+router.get("/casos/:id/agente", casosController.getAgenteDoCaso);
+```
 
-Verifique se os casos estão sendo criados antes da busca e se o ID está correto.
+Assim você mantém tudo consistente, evitando erros difíceis de rastrear.
 
 ---
 
-### 5. Atualização (PUT e PATCH) de caso inexistente não retorna 404 corretamente
+### 2. Sobre os filtros e ordenações que não passaram nos bônus
 
-No `updateCaso` e `patchCaso`, você verifica se o caso existe:
+Você implementou filtros básicos para casos e agentes, mas alguns filtros mais complexos não passaram, como ordenação por data de incorporação em ordem crescente e decrescente, e busca por keywords no título e descrição dos casos.
 
-```js
-const caso = findById(id);
-if (!caso) return errorResponse(res, 404, "Caso não encontrado");
-```
-
-Isso está certo, mas o teste indica problema.
-
-**Possível causa:**  
-Se a função `findById` do repositório de casos não está encontrando o caso, ou se a atualização está sobrescrevendo o ID do caso (veja o próximo ponto de penalidades), pode causar inconsistência.
-
----
-
-### 6. Penalidades: Permitir alteração do ID em PUT e PATCH (Agentes e Casos)
-
-Esse é um ponto crítico! Vi no seu código que no método `updateAgente` e `updateCaso`, você permite que o campo `id` seja alterado, o que não deve acontecer.
-
-Exemplo em `updateAgente`:
+No controller dos agentes, você faz:
 
 ```js
-const { nome, dataDeIncorporacao, cargo } = req.body;
-// Você não está extraindo o id do body, mas no PATCH...
-// No PATCH, não há controle para impedir alteração do id
-```
-
-No PATCH de agente:
-
-```js
-const { nome, dataDeIncorporacao, cargo } = req.body;
-if (nome !== undefined) agente.nome = nome;
-if (dataDeIncorporacao !== undefined) agente.dataDeIncorporacao = dataDeIncorporacao;
-if (cargo !== undefined) agente.cargo = cargo;
-// Se o id vier no body, ele não é tratado aqui, mas e se vier?
-```
-
-Você precisa garantir que o campo `id` **não seja alterado** em nenhuma atualização, seja PUT ou PATCH.
-
-**Como fazer isso?**
-
-- Ignore o campo `id` vindo no corpo da requisição; não o sobrescreva.  
-- Ou retorne erro se o cliente tentar alterar o id.
-
-Exemplo para PATCH:
-
-```js
-if ('id' in req.body) {
-  return errorResponse(res, 400, "Não é permitido alterar o campo 'id'");
-}
-```
-
-Ou simplesmente não copie o `id` para o objeto.
-
----
-
-### 7. Validação de data de incorporação permite datas futuras
-
-No `createAgente` e `updateAgente`, você valida o formato da data, mas não impede datas futuras, o que não é desejado.
-
-Exemplo do seu código:
-
-```js
-if (!dataDeIncorporacao || !/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao))
-  errors.push({
-    dataDeIncorporacao:
-      "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD' ",
-  });
-```
-
-**Como melhorar?**
-
-- Valide se a data não é maior que a data atual.
-
-Exemplo simples:
-
-```js
-const hoje = new Date().toISOString().split("T")[0];
-if (dataDeIncorporacao > hoje) {
-  errors.push({
-    dataDeIncorporacao: "Data de incorporação não pode ser no futuro",
-  });
-}
-```
-
----
-
-### 8. Filtro por keywords no título e descrição dos casos não está funcionando
-
-Você tem esse filtro no `getAllCasos`:
-
-```js
-if (q)
-  casos = casos.filter(
-    (c) => c.titulo.includes(q) || c.descricao.includes(q),
+const { dataDeIncorporacao, sort } = req.query;
+if (dataDeIncorporacao) {
+  agentes = agentes.filter(
+    (a) => a.dataDeIncorporacao === dataDeIncorporacao
   );
+}
+if (sort === "asc") {
+  agentes.sort((a, b) =>
+    a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao)
+  );
+} else if (sort === "desc") {
+  agentes.sort((a, b) =>
+    b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao)
+  );
+}
 ```
 
-Isso parece correto, mas o teste indica que não funciona.
+Mas o problema pode estar na forma como você está recebendo esses parâmetros. Geralmente, para ordenar, espera-se que o parâmetro `sort` esteja presente junto com o filtro `dataDeIncorporacao`. Se o filtro `dataDeIncorporacao` não for passado, o sort não deveria ser aplicado, certo? Ou seja, pode ser que o teste espere que você permita ordenar todos os agentes por data mesmo sem filtro.
 
-**Possível causa:**  
-O filtro é case sensitive. Se a palavra pesquisada estiver em maiúsculas/minúsculas diferente do texto, não será encontrada.
+**Sugestão:** permita ordenar todos os agentes por `dataDeIncorporacao` mesmo sem filtro, assim:
 
-**Como melhorar?**
+```js
+let agentes = findAll();
+const { dataDeIncorporacao, sort } = req.query;
+if (dataDeIncorporacao) {
+  agentes = agentes.filter(
+    (a) => a.dataDeIncorporacao === dataDeIncorporacao
+  );
+}
+if (sort === "asc") {
+  agentes.sort((a, b) =>
+    a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao)
+  );
+} else if (sort === "desc") {
+  agentes.sort((a, b) =>
+    b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao)
+  );
+}
+res.json(agentes);
+```
 
-Faça a busca case insensitive:
+Assim, o sort é aplicado sempre que solicitado, não apenas quando há filtro por data.
+
+---
+
+### 3. Sobre a filtragem por keywords no título e descrição dos casos
+
+No seu controller de casos, você tem:
 
 ```js
 if (q) {
@@ -281,76 +160,72 @@ if (q) {
   casos = casos.filter(
     (c) =>
       c.titulo.toLowerCase().includes(query) ||
-      c.descricao.toLowerCase().includes(query),
+      c.descricao.toLowerCase().includes(query)
   );
 }
 ```
 
----
-
-### 9. Endpoint de busca do agente responsável por um caso (GET /casos/:caso_id/agente) está duplicado
-
-Notei que em `casosRoutes.js`, você declarou duas vezes essa rota:
-
-```js
-router.get("/casos/:caso_id/agente", casosController.getAgenteDoCaso);
-...
-router.get("/casos/:caso_id/agente", casosController.getAgenteDoCaso);
-```
-
-Não causa erro, mas é redundante e pode confundir.
+Essa lógica está correta e deve funcionar para busca por keywords. Porém, para garantir que funcione sempre, verifique se o parâmetro `q` está sendo passado corretamente nas requisições e se o teste espera algum comportamento específico (como ignorar espaços, ou aceitar múltiplas palavras).
 
 ---
 
-## 📚 Recomendações de Aprendizado
+### 4. Sobre a organização do projeto e estrutura dos arquivos
 
-- Para entender melhor sobre **validação de dados e tratamento de erros** em APIs, recomendo muito este vídeo:  
-  https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_  
-- Para aprofundar na **manipulação correta de arrays** e filtros, que são essenciais para os filtros de casos e agentes, veja:  
-  https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI  
-- Se quiser revisar conceitos sobre **arquitetura MVC e organização de projetos Node.js**, este vídeo é uma ótima fonte:  
-  https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH  
-- Para entender melhor o funcionamento do **protocolo HTTP e status codes**, fundamental para retornar os códigos corretos, veja:  
-  https://youtu.be/RSZHvQomeKE  
-
----
-
-## 🗺️ Sobre a Estrutura do Projeto
-
-Sua estrutura está muito bem alinhada com o que era esperado:
+Sua estrutura está muito boa e alinhada com o esperado:
 
 ```
-.
 ├── controllers/
-├── routes/
+│   ├── agentesController.js
+│   └── casosController.js
 ├── repositories/
-├── docs/
-├── utils/
+│   ├── agentesRepository.js
+│   └── casosRepository.js
+├── routes/
+│   ├── agentesRoutes.js
+│   └── casosRoutes.js
 ├── server.js
 ├── package.json
+├── utils/
+│   └── errorHandler.js
+├── docs/
+│   └── swagger.js
 ```
 
-Parabéns por manter o projeto organizado! Isso facilita muito a leitura e manutenção do código.
+Isso é ótimo! 👏 Manter essa organização facilita muito a manutenção e evolução do projeto.
 
 ---
 
-## 📝 Resumo dos Principais Pontos para Melhorar
+## Recomendações de aprendizado para você seguir firme! 📚
 
-- **Validação mais rigorosa no PATCH**: valide os campos que forem enviados, para evitar dados inválidos.  
-- **Impedir alteração do campo `id`** em atualizações PUT e PATCH, tanto para agentes quanto para casos.  
-- **Validar datas de incorporação para não permitir datas futuras**.  
-- **Diferenciar erros 400 e 404 na criação de casos com `agente_id` inválido ou inexistente**.  
-- **Ajustar filtro de busca por keywords para ser case insensitive**.  
-- **Garantir que os dados estejam sendo criados antes de buscar por ID para evitar falsos negativos em 404**.  
-- **Evitar duplicidade de rotas no arquivo `casosRoutes.js`**.  
+- Para entender melhor como organizar rotas e controllers, recomendo muito a leitura da documentação oficial do Express sobre roteamento:  
+  https://expressjs.com/pt-br/guide/routing.html
+
+- Para aprofundar seu entendimento sobre validação de dados e tratamento de erros em APIs REST, este vídeo é excelente:  
+  https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
+
+- Para manipulação de arrays (filtragem, ordenação), que é uma parte essencial para os filtros da sua API, veja este vídeo que explica os métodos principais:  
+  https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI
+
+- Por fim, para consolidar seu conhecimento sobre o protocolo HTTP, status codes e métodos, veja este conteúdo:  
+  https://youtu.be/RSZHvQomeKE
 
 ---
 
-Igor, você está no caminho certo! Seu código já está bastante robusto e organizado, e com esses ajustes você vai deixar sua API ainda mais profissional e confiável. Continue explorando, validando e testando! 🚀
+## Resumo rápido para você focar agora 🚦
 
-Se precisar, volte aos vídeos recomendados para reforçar os conceitos e, claro, conte comigo para te ajudar! 💪
+- 🔄 Padronize o nome do parâmetro de rota para identificar recursos (`id` em vez de `caso_id`) para evitar inconsistências na validação e buscas.
+- 🔍 Ajuste o filtro e ordenação dos agentes para que o `sort` funcione mesmo sem filtro de data.
+- 🔎 Revise o comportamento da busca por keywords (`q`) para garantir que atenda a todos os casos esperados.
+- ✅ Continue mantendo o tratamento de erros com mensagens claras e status HTTP corretos.
+- 🗂️ Mantenha sua ótima organização de pastas e arquivos para facilitar a escalabilidade do projeto.
 
-Bons códigos e até a próxima! 👋😊
+---
+
+Igor, você está no caminho certo e já entregou uma base muito sólida! 🚀 Com esses ajustes, sua API vai ficar ainda mais robusta e alinhada com as melhores práticas. Continue praticando, revisando seu código e buscando entender a fundo cada detalhe. Isso faz toda a diferença na sua evolução como desenvolvedor.
+
+Se precisar, volte a esses recursos e não hesite em perguntar! Estou aqui para te ajudar. Vamos juntos! 💪✨
+
+Um abraço de Code Buddy! 🤖❤️
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
