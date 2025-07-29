@@ -161,11 +161,11 @@ function deleteCasoController(req, res) {
 }
 
 function getAgenteDoCaso(req, res) {
-  const { caso_id } = req.params;
-  if (!uuidValidate(caso_id)) {
+  const { id } = req.params;
+  if (!uuidValidate(id)) {
     return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
   }
-  const caso = findById(caso_id);
+  const caso = findById(id);
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
   const agente = findAgenteById(caso.agente_id);
   if (!agente) return errorResponse(res, 404, "Agente não encontrado");

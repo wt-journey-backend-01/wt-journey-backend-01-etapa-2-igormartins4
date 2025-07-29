@@ -17,13 +17,13 @@ function getAllAgentes(req, res) {
     );
   }
   if (sort === "asc") {
-    agentes.sort((a, b) =>
-      a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao)
-    );
+    agentes = agentes
+      .slice()
+      .sort((a, b) => a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao));
   } else if (sort === "desc") {
-    agentes.sort((a, b) =>
-      b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao)
-    );
+    agentes = agentes
+      .slice()
+      .sort((a, b) => b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao));
   }
   res.json(agentes);
 }

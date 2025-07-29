@@ -11,6 +11,12 @@ import casosController from "../controllers/casosController.js";
  *     responses:
  *       200:
  *         description: Lista de casos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Caso'
  *   post:
  *     summary: Cria um novo caso
  *     tags: [Casos]
@@ -19,10 +25,19 @@ import casosController from "../controllers/casosController.js";
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Caso'
+ *             $ref: '#/components/schemas/CasoInput'
+ *           example:
+ *             titulo: "Roubo de carro"
+ *             descricao: "Veículo roubado no centro da cidade."
+ *             status: "aberto"
+ *             agente_id: "uuid-do-agente"
  *     responses:
  *       201:
  *         description: Caso criado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Caso'
  */
 router.get("/casos", casosController.getAllCasos);
 router.post("/casos", casosController.createCaso);
@@ -41,6 +56,10 @@ router.post("/casos", casosController.createCaso);
  *     responses:
  *       200:
  *         description: Caso encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Caso'
  *       404:
  *         description: Caso não encontrado
  *   put:
@@ -61,6 +80,10 @@ router.post("/casos", casosController.createCaso);
  *     responses:
  *       200:
  *         description: Caso atualizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Caso'
  *   patch:
  *     summary: Atualiza parcialmente um caso
  *     tags: [Casos]
@@ -79,6 +102,10 @@ router.post("/casos", casosController.createCaso);
  *     responses:
  *       200:
  *         description: Caso atualizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Caso'
  *   delete:
  *     summary: Remove um caso do sistema
  *     tags: [Casos]
@@ -96,28 +123,74 @@ router.post("/casos", casosController.createCaso);
  */
 /**
  * @swagger
- * /casos/{caso_id}/agente:
+ * /casos/{id}/agente:
  *   get:
  *     summary: Retorna os dados completos do agente responsável por um caso específico
  *     tags: [Casos]
  *     parameters:
  *       - in: path
- *         name: caso_id
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
  *         description: Dados do agente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Agente'
  *       404:
  *         description: Caso ou agente não encontrado
+ 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Caso:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           example: "b1a7e7e2-8c2e-4b7a-9c2e-123456789abc"
+ *         titulo:
+ *           type: string
+ *           example: "Roubo de carro"
+ *         descricao:
+ *           type: string
+ *           example: "Veículo roubado no centro da cidade."
+ *         status:
+ *           type: string
+ *           enum: [aberto, solucionado]
+ *           example: "aberto"
+ *         agente_id:
+ *           type: string
+ *           format: uuid
+ *           example: "c2b7e7e2-8c2e-4b7a-9c2e-abcdef123456"
+ *     CasoInput:
+ *       type: object
+ *       properties:
+ *         titulo:
+ *           type: string
+ *           example: "Roubo de carro"
+ *         descricao:
+ *           type: string
+ *           example: "Veículo roubado no centro da cidade."
+ *         status:
+ *           type: string
+ *           enum: [aberto, solucionado]
+ *           example: "aberto"
+ *         agente_id:
+ *           type: string
+ *           format: uuid
+ *           example: "c2b7e7e2-8c2e-4b7a-9c2e-abcdef123456"
  */
-// ...existing code...
 
 router.get("/casos/:id", casosController.getCasoById);
 router.put("/casos/:id", casosController.updateCaso);
 router.patch("/casos/:id", casosController.patchCaso);
 router.delete("/casos/:id", casosController.deleteCaso);
-router.get("/casos/:caso_id/agente", casosController.getAgenteDoCaso);
+router.get("/casos/:id/agente", casosController.getAgenteDoCaso);
 
 export default router;
