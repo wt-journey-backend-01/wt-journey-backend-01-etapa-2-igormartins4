@@ -1,3 +1,4 @@
+
 import {
   findAll,
   findById,
@@ -7,6 +8,8 @@ import {
 } from "../repositories/casosRepository.js";
 import { findById as findAgenteById } from "../repositories/agentesRepository.js";
 import { errorResponse } from "../utils/errorHandler.js";
+import { v4 as uuidv4, validate as uuidValidate } from "uuid";
+
 
 function getAllCasos(req, res) {
   let casos = findAll();
@@ -20,16 +23,21 @@ function getAllCasos(req, res) {
   res.json(casos);
 }
 
+
 function getCasoById(req, res) {
-  const caso = findById(req.params.id);
+  const { id } = req.params;
+  if (!uuidValidate(id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
+  const caso = findById(id);
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
   res.json(caso);
 }
 
+
 function createCaso(req, res) {
-  const { id, titulo, descricao, status, agente_id } = req.body;
+  const { titulo, descricao, status, agente_id } = req.body;
   const errors = [];
-  if (!id) errors.push({ id: "Campo 'id' é obrigatório" });
   if (!titulo) errors.push({ titulo: "Campo 'titulo' é obrigatório" });
   if (!descricao) errors.push({ descricao: "Campo 'descricao' é obrigatório" });
   if (!status || !["aberto", "solucionado"].includes(status))
@@ -37,20 +45,41 @@ function createCaso(req, res) {
       status: "O campo 'status' pode ser somente 'aberto' ou 'solucionado' ",
     });
   if (!agente_id) errors.push({ agente_id: "Campo 'agente_id' é obrigatório" });
+  if (agente_id && !uuidValidate(agente_id)) {
+    errors.push({ agente_id: "agente_id deve ser um UUID válido" });
+  }
+  if (agente_id && uuidValidate(agente_id)) {
+    const agenteExiste = findAgenteById(agente_id);
+    if (!agenteExiste) {
+      errors.push({ agente_id: "Agente não encontrado para o agente_id fornecido" });
+    }
+  }
   if (errors.length)
     return errorResponse(res, 400, "Parâmetros inválidos", errors);
+  const id = uuidv4();
   const caso = { id, titulo, descricao, status, agente_id };
   create(caso);
   res.status(201).json(caso);
 }
 
+
 function updateCaso(req, res) {
   const { id } = req.params;
+  if (!uuidValidate(id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
   const { titulo, descricao, status, agente_id } = req.body;
   const caso = findById(id);
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
   if (!titulo || !descricao || !status || !agente_id)
     return errorResponse(res, 400, "Parâmetros inválidos");
+  if (!uuidValidate(agente_id)) {
+    return errorResponse(res, 400, "agente_id deve ser um UUID válido");
+  }
+  const agenteExiste = findAgenteById(agente_id);
+  if (!agenteExiste) {
+    return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+  }
   caso.titulo = titulo;
   caso.descricao = descricao;
   caso.status = status;
@@ -59,28 +88,50 @@ function updateCaso(req, res) {
   res.json(caso);
 }
 
+
 function patchCaso(req, res) {
   const { id } = req.params;
+  if (!uuidValidate(id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
   const caso = findById(id);
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
   const { titulo, descricao, status, agente_id } = req.body;
   if (titulo !== undefined) caso.titulo = titulo;
   if (descricao !== undefined) caso.descricao = descricao;
   if (status !== undefined) caso.status = status;
-  if (agente_id !== undefined) caso.agente_id = agente_id;
+  if (agente_id !== undefined) {
+    if (!uuidValidate(agente_id)) {
+      return errorResponse(res, 400, "agente_id deve ser um UUID válido");
+    }
+    const agenteExiste = findAgenteById(agente_id);
+    if (!agenteExiste) {
+      return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+    }
+    caso.agente_id = agente_id;
+  }
   update(id, caso);
   res.json(caso);
 }
 
+
 function deleteCasoController(req, res) {
   const { id } = req.params;
+  if (!uuidValidate(id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
   const deleted = deleteCaso(id);
   if (!deleted) return errorResponse(res, 404, "Caso não encontrado");
   res.status(204).send();
 }
 
+
 function getAgenteDoCaso(req, res) {
-  const caso = findById(req.params.caso_id);
+  const { caso_id } = req.params;
+  if (!uuidValidate(caso_id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
+  const caso = findById(caso_id);
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
   const agente = findAgenteById(caso.agente_id);
   if (!agente) return errorResponse(res, 404, "Agente não encontrado");
