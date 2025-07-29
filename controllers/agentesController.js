@@ -19,11 +19,17 @@ function getAllAgentes(req, res) {
   if (sort === "asc") {
     agentes = agentes
       .slice()
-      .sort((a, b) => new Date(a.dataDeIncorporacao) - new Date(b.dataDeIncorporacao));
+      .sort(
+        (a, b) =>
+          new Date(a.dataDeIncorporacao) - new Date(b.dataDeIncorporacao)
+      );
   } else if (sort === "desc") {
     agentes = agentes
       .slice()
-      .sort((a, b) => new Date(b.dataDeIncorporacao) - new Date(a.dataDeIncorporacao));
+      .sort(
+        (a, b) =>
+          new Date(b.dataDeIncorporacao) - new Date(a.dataDeIncorporacao)
+      );
   }
   res.json(agentes);
 }
@@ -118,7 +124,11 @@ function patchAgente(req, res) {
     (campo) => !camposPermitidos.includes(campo)
   );
   if (camposInvalidos.length > 0) {
-    return errorResponse(res, 400, `Campos não permitidos: ${camposInvalidos.join(", ")}`);
+    return errorResponse(
+      res,
+      400,
+      `Campos não permitidos: ${camposInvalidos.join(", ")}`
+    );
   }
   const agente = findById(id);
   if (!agente) return errorResponse(res, 404, "Agente não encontrado");

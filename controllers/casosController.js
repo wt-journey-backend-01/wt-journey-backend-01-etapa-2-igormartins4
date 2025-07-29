@@ -38,13 +38,15 @@ function getCasoById(req, res) {
 function createCaso(req, res) {
   const { titulo, descricao, status, agente_id } = req.body;
   const errors = [];
-  if (!titulo) errors.push("Campo 'titulo' é obrigatório");
-  if (!descricao) errors.push("Campo 'descricao' é obrigatório");
+  if (!titulo) errors.push({ titulo: "Campo 'titulo' é obrigatório" });
+  if (!descricao) errors.push({ descricao: "Campo 'descricao' é obrigatório" });
   if (!status || !["aberto", "solucionado"].includes(status))
-    errors.push("O campo 'status' pode ser somente 'aberto' ou 'solucionado' ");
-  if (!agente_id) errors.push("Campo 'agente_id' é obrigatório");
+    errors.push({
+      status: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'",
+    });
+  if (!agente_id) errors.push({ agente_id: "Campo 'agente_id' é obrigatório" });
   if (agente_id && !uuidValidate(agente_id)) {
-    errors.push("agente_id deve ser um UUID válido");
+    errors.push({ agente_id: "agente_id deve ser um UUID válido" });
   }
   if (errors.length) {
     return errorResponse(res, 400, "Parâmetros inválidos", errors);
@@ -52,7 +54,11 @@ function createCaso(req, res) {
   if (agente_id && uuidValidate(agente_id)) {
     const agenteExiste = findAgenteById(agente_id);
     if (!agenteExiste) {
-      return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+      return errorResponse(
+        res,
+        404,
+        "Agente não encontrado para o agente_id fornecido"
+      );
     }
   }
   const id = uuidv4();
