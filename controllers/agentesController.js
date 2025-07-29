@@ -19,11 +19,11 @@ function getAllAgentes(req, res) {
   if (sort === "asc") {
     agentes = agentes
       .slice()
-      .sort((a, b) => a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao));
+      .sort((a, b) => new Date(a.dataDeIncorporacao) - new Date(b.dataDeIncorporacao));
   } else if (sort === "desc") {
     agentes = agentes
       .slice()
-      .sort((a, b) => b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao));
+      .sort((a, b) => new Date(b.dataDeIncorporacao) - new Date(a.dataDeIncorporacao));
   }
   res.json(agentes);
 }
@@ -106,8 +106,19 @@ function patchAgente(req, res) {
   if (!uuidValidate(id)) {
     return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
   }
+  if (Object.keys(req.body).length === 0) {
+    return errorResponse(res, 400, "Payload vazio para atualização");
+  }
   if ("id" in req.body) {
     return errorResponse(res, 400, "Não é permitido alterar o campo 'id'");
+  }
+  // Só permitir campos válidos
+  const camposPermitidos = ["nome", "dataDeIncorporacao", "cargo"];
+  const camposInvalidos = Object.keys(req.body).filter(
+    (campo) => !camposPermitidos.includes(campo)
+  );
+  if (camposInvalidos.length > 0) {
+    return errorResponse(res, 400, `Campos não permitidos: ${camposInvalidos.join(", ")}`);
   }
   const agente = findById(id);
   if (!agente) return errorResponse(res, 404, "Agente não encontrado");

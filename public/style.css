@@ -26,6 +26,9 @@ a {
 a:hover {
   text-decoration: underline;
 }
+span{
+  color: #888;
+}
 .info {
   margin-top: 32px;
   color: #888;

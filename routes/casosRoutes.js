@@ -188,10 +188,12 @@ router.post("/", casosController.createCaso);
  *           example: "c2b7e7e2-8c2e-4b7a-9c2e-abcdef123456"
  */
 
-router.get("/:id", casosController.getCasoById);
-router.put("/:id", casosController.updateCaso);
-router.patch("/:id", casosController.patchCaso);
-router.delete("/:id", casosController.deleteCaso);
-router.get("/:id/agente", casosController.getAgenteDoCaso);
+
+// Rota mais específica primeiro
+router.get(":id/agente", casosController.getAgenteDoCaso);
+router.get(":id", casosController.getCasoById);
+router.put(":id", casosController.updateCaso);
+router.patch(":id", casosController.patchCaso);
+router.delete(":id", casosController.deleteCaso);
 
 export default router;
