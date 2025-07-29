@@ -24,6 +24,6 @@ app.use(casosRouter);
 
 app.listen(PORT, () => {
   console.log(
-    `Servidor do Departamento de Polícia rodando em http://localhost:${PORT} em modo de desenvolvimento`,
+    `Servidor do Departamento de Polícia rodando em http://localhost:${PORT} em modo de desenvolvimento`
   );
 });

@@ -112,7 +112,7 @@ router.post("/casos", casosController.createCaso);
  *       404:
  *         description: Caso ou agente não encontrado
  */
-router.get("/casos/:caso_id/agente", casosController.getAgenteDoCaso);
+// ...existing code...
 
 router.get("/casos/:id", casosController.getCasoById);
 router.put("/casos/:id", casosController.updateCaso);

@@ -1,254 +1,360 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 9 créditos restantes para usar o sistema de feedback AI.
+Você tem 8 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para igormartins4:
 
-Nota final: **33.8/100**
+Nota final: **76.8/100**
 
-# Feedback para igormartins4 🚔✨
+# Feedback para o igormartins4 🚓✨
 
-Olá, Igor! Antes de mais nada, parabéns pelo esforço e dedicação em construir essa API para o Departamento de Polícia! 🎉 Você já avançou bastante e conseguiu implementar várias funcionalidades importantes, o que é um ótimo sinal de evolução. Vamos juntos destrinchar seu código para você entender onde pode melhorar e como deixar sua API tinindo! 🚀
-
----
-
-## 🎯 O que você já fez muito bem — parabéns!
-
-- Sua organização de arquivos está correta! Você seguiu a arquitetura modular com pastas separadas para `routes`, `controllers`, `repositories`, `docs` e `utils`, exatamente como esperado. Isso é fundamental para manter o projeto escalável e fácil de manter. 👏
-
-- Os endpoints básicos para `/agentes` e `/casos` estão declarados nos arquivos de rotas, e você já implementou os controladores com as funções principais para CRUD (Create, Read, Update, Delete). Isso mostra que você entendeu o fluxo básico do Express.js e da arquitetura MVC.
-
-- Você implementou validações nos payloads de criação e atualização, retornando status 400 e mensagens de erro personalizadas, o que é ótimo para a qualidade da API.
-
-- O uso do middleware `express.json()` está correto, permitindo que sua API processe JSON no corpo das requisições.
-
-- Você já fez um filtro simples de busca por palavra-chave (`q`) nos casos, que é um bônus muito legal! Isso mostra que você está indo além do básico. 🌟
+Olá, Igor! Que jornada incrível você fez até aqui! 🎉 Seu projeto da API para o Departamento de Polícia está bem estruturado e você conseguiu implementar uma boa parte dos requisitos, inclusive várias funcionalidades bônus, o que merece muitos parabéns! 👏👏
 
 ---
 
-## 🔎 Pontos de melhoria e causas raízes para os problemas detectados
+## 🎯 Pontos Fortes & Conquistas Bônus
 
-### 1. Falha na criação e manipulação dos agentes e casos
+1. **Organização Modular**: Você estruturou muito bem seu projeto, separando rotas, controllers e repositories, exatamente como esperado. Isso facilita a manutenção e crescimento do código. 👏  
+2. **Endpoints básicos funcionando**: Os métodos HTTP essenciais para `/agentes` e `/casos` estão implementados e funcionando para a maioria dos casos.  
+3. **Validações e tratamento de erros**: Você implementou validações importantes, como o uso do UUID para IDs e verificação de campos obrigatórios, além de retornar os status codes corretos (400, 404, 201, etc).  
+4. **Filtros e ordenação**: Parabéns por implementar filtros nos endpoints, como buscar casos por status e agente, e agentes por data de incorporação com ordenação ascendente e descendente — isso é um diferencial!  
+5. **Mensagens de erro customizadas**: Você caprichou nas respostas de erro para agentes inválidos, o que enriquece a experiência de quem consome sua API.
 
-Eu percebi que muitos erros importantes relacionados aos endpoints de agentes e casos estão acontecendo, principalmente na criação, listagem, atualização e deleção. Isso indica que, apesar de você ter os endpoints declarados, o fluxo de dados não está funcionando corretamente.
+---
 
-**Causa raiz:**  
-Ao analisar seu código, notei que você está importando as funções do repositório e usando arrays em memória corretamente, mas o problema principal está na **validação dos IDs**. Os IDs que você está usando não são UUIDs, e o sistema espera IDs nesse formato para validar as operações.
+## 🔍 Análise dos Pontos que Precisam de Atenção
 
-Além disso, no seu código de criação de casos, você não está validando se o `agente_id` informado realmente existe antes de criar o caso, o que gera falha. Veja esse trecho do seu controller `createCaso`:
+### 1. Status 404 ao buscar agente inexistente não está sendo retornado corretamente
+
+Você implementou a validação do ID com `uuidValidate` e retorna 400 para IDs inválidos, o que é ótimo:
 
 ```js
-function createCaso(req, res) {
-  const { id, titulo, descricao, status, agente_id } = req.body;
-  // ...
-  if (errors.length)
-    return errorResponse(res, 400, "Parâmetros inválidos", errors);
-  const caso = { id, titulo, descricao, status, agente_id };
-  create(caso);
-  res.status(201).json(caso);
+function getAgenteById(req, res) {
+  const { id } = req.params;
+  if (!uuidValidate(id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
+  const agente = findById(id);
+  if (!agente) {
+    return errorResponse(res, 404, "Agente não encontrado");
+  }
+  res.json(agente);
 }
 ```
 
-Aqui, falta uma validação para garantir que o `agente_id` passado exista de fato no repositório de agentes. Isso pode causar problemas na integridade dos dados.
+Porém, o teste indica que ao buscar um agente que não existe, o retorno 404 falha. Isso pode indicar algum problema na função `findById` do `agentesRepository.js` ou na forma como o agente é buscado.
 
-**Como melhorar:**
-
-- Implemente a validação para verificar se o `agente_id` existe antes de criar ou atualizar um caso, retornando erro 404 se não existir.
-
-- Utilize IDs no formato UUID para agentes e casos. Isso é importante para evitar conflitos e garantir unicidade. Você pode usar pacotes como `uuid` para gerar esses IDs.
-
-Exemplo de validação para `agente_id`:
+**Investigando o repository:**
 
 ```js
-import { findById as findAgenteById } from "../repositories/agentesRepository.js";
+function findById(id) {
+  return agentes.find((a) => a.id === id);
+}
+```
 
-function createCaso(req, res) {
-  const { id, titulo, descricao, status, agente_id } = req.body;
-  const errors = [];
-  // validações existentes...
+Está correto, mas será que os agentes estão sendo realmente armazenados? Como o array `agentes` é um array em memória, se você não criar agentes antes de buscar, naturalmente não vai encontrar.
 
-  // Validação do agente_id
+**Dica:** Certifique-se de que os agentes estão sendo criados corretamente antes de testar a busca. Além disso, revise se o `id` passado é exatamente igual ao armazenado (mesmo tipo e conteúdo).
+
+---
+
+### 2. Atualização parcial (PATCH) de agente com payload em formato incorreto não retorna 400
+
+No seu controller `patchAgente`, você permite atualizar parcialmente um agente:
+
+```js
+function patchAgente(req, res) {
+  const { id } = req.params;
+  if (!uuidValidate(id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
+  const agente = findById(id);
+  if (!agente) return errorResponse(res, 404, "Agente não encontrado");
+  const { nome, dataDeIncorporacao, cargo } = req.body;
+  if (nome !== undefined) agente.nome = nome;
+  if (dataDeIncorporacao !== undefined)
+    agente.dataDeIncorporacao = dataDeIncorporacao;
+  if (cargo !== undefined) agente.cargo = cargo;
+  update(id, agente);
+  res.json(agente);
+}
+```
+
+Aqui você não está validando o formato dos dados recebidos no PATCH — por exemplo, se `dataDeIncorporacao` vier em formato errado, isso não é verificado.
+
+**Por que isso importa?**  
+Se o usuário enviar um payload com um campo mal formatado, o ideal é responder com status 400 e mensagem de erro clara.
+
+**Como melhorar?**  
+Adicione validações semelhantes às do POST e PUT para o PATCH, mas apenas para os campos que vierem no corpo da requisição.
+
+Exemplo:
+
+```js
+if (dataDeIncorporacao !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao)) {
+  return errorResponse(res, 400, "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'");
+}
+```
+
+Isso evita que dados inválidos entrem no seu sistema.
+
+---
+
+### 3. Criar caso com id de agente inválido ou inexistente não retorna 404 corretamente
+
+No `createCaso`, você já faz validação do `agente_id`:
+
+```js
+if (agente_id && !uuidValidate(agente_id)) {
+  errors.push({ agente_id: "agente_id deve ser um UUID válido" });
+}
+if (agente_id && uuidValidate(agente_id)) {
   const agenteExiste = findAgenteById(agente_id);
   if (!agenteExiste) {
-    return errorResponse(
-      res,
-      404,
-      "Agente não encontrado para o agente_id fornecido",
-    );
+    errors.push({
+      agente_id: "Agente não encontrado para o agente_id fornecido",
+    });
   }
-
-  if (errors.length)
-    return errorResponse(res, 400, "Parâmetros inválidos", errors);
-
-  const caso = { id, titulo, descricao, status, agente_id };
-  create(caso);
-  res.status(201).json(caso);
 }
 ```
 
-**Recurso recomendado:**  
-Para entender melhor como validar dados e tratar erros com status 400 e 404, recomendo este artigo da MDN:  
-https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/400  
-https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/404
+Isso está correto, mas o teste indica que o status 404 não está sendo retornado quando o agente não existe.
 
-E para aprender a gerar e validar UUIDs no Node.js:  
-https://www.npmjs.com/package/uuid
+**Por que?**  
+Você está acumulando erros e retornando status 400 para todos eles, mesmo quando o agente não é encontrado. O ideal é diferenciar:
+
+- Se o `agente_id` é inválido (formato errado) — 400 Bad Request  
+- Se o `agente_id` é válido, mas não existe — 404 Not Found
+
+**Como ajustar?**  
+Separe essa lógica para retornar 404 quando agente não existe, por exemplo:
+
+```js
+if (agente_id && uuidValidate(agente_id)) {
+  const agenteExiste = findAgenteById(agente_id);
+  if (!agenteExiste) {
+    return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+  }
+}
+```
+
+E mantenha os outros erros no array para retornar 400.
 
 ---
 
-### 2. Endpoints duplicados nas rotas
+### 4. Buscar caso por ID inválido não retorna 404 corretamente
 
-Notei que no arquivo `routes/agentesRoutes.js` e `routes/casosRoutes.js` você repetiu várias vezes as mesmas rotas, por exemplo:
-
-```js
-router.post("/agentes", agentesController.createAgente);
-router.put("/agentes/:id", agentesController.updateAgente);
-router.patch("/agentes/:id", agentesController.patchAgente);
-router.delete("/agentes/:id", agentesController.deleteAgente);
-router.post("/agentes", agentesController.createAgente);
-router.put("/agentes/:id", agentesController.updateAgente);
-router.patch("/agentes/:id", agentesController.patchAgente);
-router.delete("/agentes/:id", agentesController.deleteAgente);
-```
-
-E o mesmo acontece em `casosRoutes.js`.
-
-Isso pode causar confusão e até problemas de roteamento, porque o Express vai registrar múltiplos handlers para a mesma rota e método. O ideal é declarar cada rota uma única vez.
-
-**Como melhorar:**
-
-- Remova as linhas duplicadas para garantir que cada rota seja registrada apenas uma vez.
-
-Exemplo corrigido para `agentesRoutes.js`:
+No `getCasoById`:
 
 ```js
-router.get("/agentes", agentesController.getAllAgentes);
-router.post("/agentes", agentesController.createAgente);
-router.get("/agentes/:id", agentesController.getAgenteById);
-router.put("/agentes/:id", agentesController.updateAgente);
-router.patch("/agentes/:id", agentesController.patchAgente);
-router.delete("/agentes/:id", agentesController.deleteAgente);
+function getCasoById(req, res) {
+  const { id } = req.params;
+  if (!uuidValidate(id)) {
+    return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
+  const caso = findById(id);
+  if (!caso) return errorResponse(res, 404, "Caso não encontrado");
+  res.json(caso);
+}
 ```
+
+Aqui a lógica parece correta. Se o teste falha, pode ser por:
+
+- O `findById` do `casosRepository` não encontrar o caso (normal se não existir).  
+- Ou o ID passado não está sendo validado corretamente.
+
+Verifique se os casos estão sendo criados antes da busca e se o ID está correto.
 
 ---
 
-### 3. Falta de filtros e ordenações avançadas para agentes
+### 5. Atualização (PUT e PATCH) de caso inexistente não retorna 404 corretamente
 
-Você implementou um filtro simples para casos usando a query `q`, mas os filtros por status e agente_id para casos, e os filtros por data de incorporação e ordenação para agentes, não estão implementados, o que impacta nos bônus.
-
-**Como melhorar:**
-
-- Para os agentes, implemente filtros por data de incorporação e ordenação crescente e decrescente.
-
-- Para casos, implemente filtros por status e agente_id.
-
-Exemplo para filtro e ordenação simples (no controller de agentes):
+No `updateCaso` e `patchCaso`, você verifica se o caso existe:
 
 ```js
-function getAllAgentes(req, res) {
-  let agentes = findAll();
-  const { dataDeIncorporacao, sort } = req.query;
+const caso = findById(id);
+if (!caso) return errorResponse(res, 404, "Caso não encontrado");
+```
 
-  if (dataDeIncorporacao) {
-    agentes = agentes.filter(
-      (a) => a.dataDeIncorporacao === dataDeIncorporacao,
-    );
-  }
+Isso está certo, mas o teste indica problema.
 
-  if (sort === "asc") {
-    agentes.sort((a, b) =>
-      a.dataDeIncorporacao.localeCompare(b.dataDeIncorporacao),
-    );
-  } else if (sort === "desc") {
-    agentes.sort((a, b) =>
-      b.dataDeIncorporacao.localeCompare(a.dataDeIncorporacao),
-    );
-  }
+**Possível causa:**  
+Se a função `findById` do repositório de casos não está encontrando o caso, ou se a atualização está sobrescrevendo o ID do caso (veja o próximo ponto de penalidades), pode causar inconsistência.
 
-  res.json(agentes);
+---
+
+### 6. Penalidades: Permitir alteração do ID em PUT e PATCH (Agentes e Casos)
+
+Esse é um ponto crítico! Vi no seu código que no método `updateAgente` e `updateCaso`, você permite que o campo `id` seja alterado, o que não deve acontecer.
+
+Exemplo em `updateAgente`:
+
+```js
+const { nome, dataDeIncorporacao, cargo } = req.body;
+// Você não está extraindo o id do body, mas no PATCH...
+// No PATCH, não há controle para impedir alteração do id
+```
+
+No PATCH de agente:
+
+```js
+const { nome, dataDeIncorporacao, cargo } = req.body;
+if (nome !== undefined) agente.nome = nome;
+if (dataDeIncorporacao !== undefined) agente.dataDeIncorporacao = dataDeIncorporacao;
+if (cargo !== undefined) agente.cargo = cargo;
+// Se o id vier no body, ele não é tratado aqui, mas e se vier?
+```
+
+Você precisa garantir que o campo `id` **não seja alterado** em nenhuma atualização, seja PUT ou PATCH.
+
+**Como fazer isso?**
+
+- Ignore o campo `id` vindo no corpo da requisição; não o sobrescreva.  
+- Ou retorne erro se o cliente tentar alterar o id.
+
+Exemplo para PATCH:
+
+```js
+if ('id' in req.body) {
+  return errorResponse(res, 400, "Não é permitido alterar o campo 'id'");
+}
+```
+
+Ou simplesmente não copie o `id` para o objeto.
+
+---
+
+### 7. Validação de data de incorporação permite datas futuras
+
+No `createAgente` e `updateAgente`, você valida o formato da data, mas não impede datas futuras, o que não é desejado.
+
+Exemplo do seu código:
+
+```js
+if (!dataDeIncorporacao || !/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao))
+  errors.push({
+    dataDeIncorporacao:
+      "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD' ",
+  });
+```
+
+**Como melhorar?**
+
+- Valide se a data não é maior que a data atual.
+
+Exemplo simples:
+
+```js
+const hoje = new Date().toISOString().split("T")[0];
+if (dataDeIncorporacao > hoje) {
+  errors.push({
+    dataDeIncorporacao: "Data de incorporação não pode ser no futuro",
+  });
 }
 ```
 
 ---
 
-### 4. IDs utilizados não são UUIDs
+### 8. Filtro por keywords no título e descrição dos casos não está funcionando
 
-Foi detectado que os IDs usados para agentes e casos não seguem o padrão UUID, que era um requisito do desafio. Isso pode impactar na confiabilidade da API.
-
-**Como melhorar:**
-
-- Alterar a geração e validação dos IDs para usar UUIDs.
-
-- Você pode gerar UUIDs automaticamente no backend ao criar um novo agente ou caso, para evitar que o cliente precise enviar esse ID.
-
-Exemplo usando o pacote `uuid`:
+Você tem esse filtro no `getAllCasos`:
 
 ```js
-import { v4 as uuidv4 } from "uuid";
+if (q)
+  casos = casos.filter(
+    (c) => c.titulo.includes(q) || c.descricao.includes(q),
+  );
+```
 
-function createAgente(req, res) {
-  const { nome, dataDeIncorporacao, cargo } = req.body;
-  // validações...
-  const id = uuidv4(); // gera UUID automaticamente
-  const agente = { id, nome, dataDeIncorporacao, cargo };
-  create(agente);
-  res.status(201).json(agente);
+Isso parece correto, mas o teste indica que não funciona.
+
+**Possível causa:**  
+O filtro é case sensitive. Se a palavra pesquisada estiver em maiúsculas/minúsculas diferente do texto, não será encontrada.
+
+**Como melhorar?**
+
+Faça a busca case insensitive:
+
+```js
+if (q) {
+  const query = q.toLowerCase();
+  casos = casos.filter(
+    (c) =>
+      c.titulo.toLowerCase().includes(query) ||
+      c.descricao.toLowerCase().includes(query),
+  );
 }
 ```
 
 ---
 
-### 5. Arquivo `.gitignore` não está ignorando `node_modules`
+### 9. Endpoint de busca do agente responsável por um caso (GET /casos/:caso_id/agente) está duplicado
 
-Embora não impacte diretamente a funcionalidade da API, é importante manter o repositório limpo e evitar subir a pasta `node_modules` para o controle de versão.
+Notei que em `casosRoutes.js`, você declarou duas vezes essa rota:
 
-**Como melhorar:**
-
-- Crie ou atualize seu arquivo `.gitignore` para incluir a linha:
-
-```
-node_modules/
+```js
+router.get("/casos/:caso_id/agente", casosController.getAgenteDoCaso);
+...
+router.get("/casos/:caso_id/agente", casosController.getAgenteDoCaso);
 ```
 
-Assim, o Git vai ignorar essa pasta, o que é uma boa prática.
+Não causa erro, mas é redundante e pode confundir.
 
 ---
 
-## 💡 Dicas gerais para seu aprendizado
+## 📚 Recomendações de Aprendizado
 
-- Continue estudando a arquitetura MVC para APIs RESTful, pois ela é essencial para organizar projetos Node.js de forma profissional:  
-  https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH
-
-- Reforce o entendimento sobre os métodos HTTP e os status codes corretos para cada operação:  
-  https://youtu.be/RSZHvQomeKE
-
-- Aprenda a manipular arrays com métodos como `.filter()`, `.find()`, `.map()`, pois eles são a base para trabalhar com dados em memória:  
-  https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI
-
-- Para validação de dados e tratamento de erros, esse vídeo vai ajudar bastante:  
-  https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
+- Para entender melhor sobre **validação de dados e tratamento de erros** em APIs, recomendo muito este vídeo:  
+  https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_  
+- Para aprofundar na **manipulação correta de arrays** e filtros, que são essenciais para os filtros de casos e agentes, veja:  
+  https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI  
+- Se quiser revisar conceitos sobre **arquitetura MVC e organização de projetos Node.js**, este vídeo é uma ótima fonte:  
+  https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH  
+- Para entender melhor o funcionamento do **protocolo HTTP e status codes**, fundamental para retornar os códigos corretos, veja:  
+  https://youtu.be/RSZHvQomeKE  
 
 ---
 
-## 📋 Resumo rápido para você focar:
+## 🗺️ Sobre a Estrutura do Projeto
 
-- ✅ Remova rotas duplicadas para evitar conflitos no roteamento.
-- ✅ Implemente validação para garantir que `agente_id` informado em casos exista.
-- ✅ Use IDs no formato UUID para agentes e casos, gerando-os no backend.
-- ✅ Implemente filtros e ordenações avançadas para agentes e casos para atender os bônus.
-- ✅ Atualize seu `.gitignore` para ignorar a pasta `node_modules`.
-- ✅ Garanta que os status codes HTTP estejam corretos e que as mensagens de erro sejam claras e personalizadas.
+Sua estrutura está muito bem alinhada com o que era esperado:
+
+```
+.
+├── controllers/
+├── routes/
+├── repositories/
+├── docs/
+├── utils/
+├── server.js
+├── package.json
+```
+
+Parabéns por manter o projeto organizado! Isso facilita muito a leitura e manutenção do código.
 
 ---
 
-Igor, você está no caminho certo! Seu código mostra que você entende os conceitos básicos e já está aplicando boas práticas. Com esses ajustes, sua API vai ficar muito mais robusta e alinhada com o que o desafio pede. Continue praticando e explorando esses conceitos — a evolução é garantida! 🚀💙
+## 📝 Resumo dos Principais Pontos para Melhorar
 
-Se precisar de ajuda para entender alguma dessas recomendações, me chama aqui que eu te explico com calma! 😉
+- **Validação mais rigorosa no PATCH**: valide os campos que forem enviados, para evitar dados inválidos.  
+- **Impedir alteração do campo `id`** em atualizações PUT e PATCH, tanto para agentes quanto para casos.  
+- **Validar datas de incorporação para não permitir datas futuras**.  
+- **Diferenciar erros 400 e 404 na criação de casos com `agente_id` inválido ou inexistente**.  
+- **Ajustar filtro de busca por keywords para ser case insensitive**.  
+- **Garantir que os dados estejam sendo criados antes de buscar por ID para evitar falsos negativos em 404**.  
+- **Evitar duplicidade de rotas no arquivo `casosRoutes.js`**.  
 
-Um grande abraço e bons códigos! 👊✨
+---
+
+Igor, você está no caminho certo! Seu código já está bastante robusto e organizado, e com esses ajustes você vai deixar sua API ainda mais profissional e confiável. Continue explorando, validando e testando! 🚀
+
+Se precisar, volte aos vídeos recomendados para reforçar os conceitos e, claro, conte comigo para te ajudar! 💪
+
+Bons códigos e até a próxima! 👋😊
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
----
 
+
+---
 <sup>Made By the Autograder Team.</sup><br>&nbsp;&nbsp;&nbsp;&nbsp;<sup><sup>- [Arthur Carvalho](https://github.com/ArthurCRodrigues)</sup></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;<sup><sup>- [Arthur Drumond](https://github.com/drumondpucminas)</sup></sup><br>&nbsp;&nbsp;&nbsp;&nbsp;<sup><sup>- [Gabriel Resende](https://github.com/gnvr29)</sup></sup>

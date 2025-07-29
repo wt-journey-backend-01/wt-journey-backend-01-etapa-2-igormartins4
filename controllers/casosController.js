@@ -14,10 +14,14 @@ function getAllCasos(req, res) {
   const { agente_id, status, q } = req.query;
   if (agente_id) casos = casos.filter((c) => c.agente_id === agente_id);
   if (status) casos = casos.filter((c) => c.status === status);
-  if (q)
+  if (q) {
+    const query = q.toLowerCase();
     casos = casos.filter(
-      (c) => c.titulo.includes(q) || c.descricao.includes(q),
+      (c) =>
+        c.titulo.toLowerCase().includes(query) ||
+        c.descricao.toLowerCase().includes(query)
     );
+  }
   res.json(casos);
 }
 
@@ -44,16 +48,19 @@ function createCaso(req, res) {
   if (agente_id && !uuidValidate(agente_id)) {
     errors.push({ agente_id: "agente_id deve ser um UUID válido" });
   }
+  if (errors.length) {
+    return errorResponse(res, 400, "Parâmetros inválidos", errors);
+  }
   if (agente_id && uuidValidate(agente_id)) {
     const agenteExiste = findAgenteById(agente_id);
     if (!agenteExiste) {
-      errors.push({
-        agente_id: "Agente não encontrado para o agente_id fornecido",
-      });
+      return errorResponse(
+        res,
+        404,
+        "Agente não encontrado para o agente_id fornecido"
+      );
     }
   }
-  if (errors.length)
-    return errorResponse(res, 400, "Parâmetros inválidos", errors);
   const id = uuidv4();
   const caso = { id, titulo, descricao, status, agente_id };
   create(caso);
@@ -64,6 +71,9 @@ function updateCaso(req, res) {
   const { id } = req.params;
   if (!uuidValidate(id)) {
     return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
+  }
+  if ("id" in req.body) {
+    return errorResponse(res, 400, "Não é permitido alterar o campo 'id'");
   }
   const { titulo, descricao, status, agente_id } = req.body;
   const caso = findById(id);
@@ -78,7 +88,7 @@ function updateCaso(req, res) {
     return errorResponse(
       res,
       404,
-      "Agente não encontrado para o agente_id fornecido",
+      "Agente não encontrado para o agente_id fornecido"
     );
   }
   caso.titulo = titulo;
@@ -94,12 +104,34 @@ function patchCaso(req, res) {
   if (!uuidValidate(id)) {
     return errorResponse(res, 400, "ID inválido. Deve ser um UUID.");
   }
+  if ("id" in req.body) {
+    return errorResponse(res, 400, "Não é permitido alterar o campo 'id'");
+  }
   const caso = findById(id);
   if (!caso) return errorResponse(res, 404, "Caso não encontrado");
   const { titulo, descricao, status, agente_id } = req.body;
-  if (titulo !== undefined) caso.titulo = titulo;
-  if (descricao !== undefined) caso.descricao = descricao;
-  if (status !== undefined) caso.status = status;
+  if (titulo !== undefined) {
+    if (typeof titulo !== "string" || !titulo.trim()) {
+      return errorResponse(res, 400, "Campo 'titulo' inválido");
+    }
+    caso.titulo = titulo;
+  }
+  if (descricao !== undefined) {
+    if (typeof descricao !== "string" || !descricao.trim()) {
+      return errorResponse(res, 400, "Campo 'descricao' inválido");
+    }
+    caso.descricao = descricao;
+  }
+  if (status !== undefined) {
+    if (!["aberto", "solucionado"].includes(status)) {
+      return errorResponse(
+        res,
+        400,
+        "O campo 'status' pode ser somente 'aberto' ou 'solucionado'"
+      );
+    }
+    caso.status = status;
+  }
   if (agente_id !== undefined) {
     if (!uuidValidate(agente_id)) {
       return errorResponse(res, 400, "agente_id deve ser um UUID válido");
@@ -109,7 +141,7 @@ function patchCaso(req, res) {
       return errorResponse(
         res,
         404,
-        "Agente não encontrado para o agente_id fornecido",
+        "Agente não encontrado para o agente_id fornecido"
       );
     }
     caso.agente_id = agente_id;
