@@ -88,22 +88,19 @@ function updateAgente(req, res) {
   const { nome, dataDeIncorporacao, cargo } = req.body;
   const agente = findById(id);
   if (!agente) return errorResponse(res, 404, "Agente não encontrado");
-  if (!nome || !dataDeIncorporacao || !cargo)
-    return errorResponse(res, 400, "Parâmetros inválidos");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao)) {
-    return errorResponse(
-      res,
-      400,
-      "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'"
-    );
+  const errors = [];
+  if (!nome) errors.push({ field: "nome", message: "Campo 'nome' é obrigatório" });
+  if (!dataDeIncorporacao || !/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao)) {
+    errors.push({ field: "dataDeIncorporacao", message: "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'" });
+  } else {
+    const hoje = new Date().toISOString().split("T")[0];
+    if (dataDeIncorporacao > hoje) {
+      errors.push({ field: "dataDeIncorporacao", message: "Data de incorporação não pode ser no futuro" });
+    }
   }
-  const hoje = new Date().toISOString().split("T")[0];
-  if (dataDeIncorporacao > hoje) {
-    return errorResponse(
-      res,
-      400,
-      "Data de incorporação não pode ser no futuro"
-    );
+  if (!cargo) errors.push({ field: "cargo", message: "Campo 'cargo' é obrigatório" });
+  if (errors.length) {
+    return errorResponse(res, 400, "Parâmetros inválidos", errors);
   }
   agente.nome = nome;
   agente.dataDeIncorporacao = dataDeIncorporacao;
@@ -138,36 +135,29 @@ function patchAgente(req, res) {
   const agente = findById(id);
   if (!agente) return errorResponse(res, 404, "Agente não encontrado");
   const { nome, dataDeIncorporacao, cargo } = req.body;
-  if (nome !== undefined) {
-    if (typeof nome !== "string" || !nome.trim()) {
-      return errorResponse(res, 400, "Campo 'nome' inválido");
-    }
-    agente.nome = nome;
+  const errors = [];
+  if (nome !== undefined && (typeof nome !== "string" || !nome.trim())) {
+    errors.push({ field: "nome", message: "Campo 'nome' inválido" });
   }
   if (dataDeIncorporacao !== undefined) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao)) {
-      return errorResponse(
-        res,
-        400,
-        "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'"
-      );
+      errors.push({ field: "dataDeIncorporacao", message: "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'" });
+    } else {
+      const hoje = new Date().toISOString().split("T")[0];
+      if (dataDeIncorporacao > hoje) {
+        errors.push({ field: "dataDeIncorporacao", message: "Data de incorporação não pode ser no futuro" });
+      }
     }
-    const hoje = new Date().toISOString().split("T")[0];
-    if (dataDeIncorporacao > hoje) {
-      return errorResponse(
-        res,
-        400,
-        "Data de incorporação não pode ser no futuro"
-      );
-    }
-    agente.dataDeIncorporacao = dataDeIncorporacao;
   }
-  if (cargo !== undefined) {
-    if (typeof cargo !== "string" || !cargo.trim()) {
-      return errorResponse(res, 400, "Campo 'cargo' inválido");
-    }
-    agente.cargo = cargo;
+  if (cargo !== undefined && (typeof cargo !== "string" || !cargo.trim())) {
+    errors.push({ field: "cargo", message: "Campo 'cargo' inválido" });
   }
+  if (errors.length) {
+    return errorResponse(res, 400, "Parâmetros inválidos", errors);
+  }
+  if (nome !== undefined) agente.nome = nome;
+  if (dataDeIncorporacao !== undefined) agente.dataDeIncorporacao = dataDeIncorporacao;
+  if (cargo !== undefined) agente.cargo = cargo;
   update(id, agente);
   res.json(agente);
 }
