@@ -1,6 +1,6 @@
 <sup>Esse é um feedback gerado por IA, ele pode conter erros.</sup>
 
-Você tem 2 créditos restantes para usar o sistema de feedback AI.
+Você tem 1 créditos restantes para usar o sistema de feedback AI.
 
 # Feedback para igormartins4:
 
@@ -8,37 +8,80 @@ Nota final: **87.4/100**
 
 # Feedback para igormartins4 🚔✨
 
-Olá, Igor! Que jornada incrível você está trilhando construindo essa API para o Departamento de Polícia! 🚀 Já dá pra sentir que você tem uma boa base e organizou seu projeto com bastante cuidado. Vamos juntos analisar seu código com carinho, celebrar os acertos e destrinchar os pontos que podem ser melhorados para deixar sua API tinindo! 💪😄
+Olá, Igor! Tudo bem? Primeiramente, parabéns pelo empenho e pela dedicação ao construir essa API para o Departamento de Polícia! 🎉 Seu código demonstra um cuidado muito legal com a arquitetura modular, a separação de responsabilidades e a implementação de validações e tratamentos de erro, o que é essencial para APIs robustas e profissionais. Vamos juntos analisar seus acertos e pontos que podemos melhorar para deixar sua API ainda mais completa e alinhada com o que esperávamos! 🚀
 
 ---
 
-## 🎉 O que está muito bem feito
+## 🎯 Pontos Fortes que Merecem Destaque
 
-- Sua **estrutura de pastas e arquivos** está perfeita e segue o padrão modular esperado: você separou bem as rotas, controladores, repositórios e utils, o que facilita muito a manutenção e escalabilidade do projeto.
-
-- A implementação dos endpoints de `/agentes` está muito sólida! Você cobriu todos os métodos HTTP (GET, POST, PUT, PATCH, DELETE) com validações e tratamento de erros adequados. Isso é fundamental para uma API robusta.
-
-- O uso do UUID para identificação está correto e você validou bem os IDs recebidos, evitando erros por IDs malformados.
-
-- O tratamento de erros está bem estruturado, com mensagens claras e status HTTP apropriados, o que melhora muito a experiência de quem consome sua API.
-
-- Você já implementou filtros simples e ordenação para agentes e casos, o que é um diferencial excelente e mostra que está pensando em usabilidade da API.
-
-- Os bônus que você conseguiu implementar, como filtros por status e agente, e mensagens customizadas para erros em agentes, são ótimos! 👏 Isso demonstra que você foi além do básico.
+- Você estruturou muito bem seu projeto, com pastas claras para **controllers**, **repositories**, **routes**, **utils** e **docs**. Isso é fundamental para manutenção e escalabilidade! 👏  
+- Os endpoints básicos para **agentes** e **casos** estão implementados, com todos os métodos HTTP principais (GET, POST, PUT, PATCH, DELETE).  
+- Ótimo trabalho nas validações dos campos, especialmente no tratamento detalhado dos erros e no uso correto dos códigos HTTP 400 e 404.  
+- Você fez um excelente uso do pacote `uuid` para validar IDs, o que ajuda a evitar problemas com dados inválidos.  
+- A implementação do filtro por `cargo`, `dataDeIncorporacao` e ordenação para agentes, assim como os filtros básicos para casos, está muito boa!  
+- Parabéns por implementar os bônus de filtragem simples para casos por `status` e `agente_id`, e também pelas mensagens de erro customizadas para agentes inválidos. Isso mostra cuidado extra com a experiência do usuário da API! 🌟
 
 ---
 
-## 🔍 Pontos que precisam de atenção para destravar 100%
+## 🔍 Pontos de Atenção e Oportunidades de Melhoria
 
-### 1. Endpoint `/casos/:id/agente` — Busca do agente responsável por um caso
+### 1. Falha no filtro de busca por palavra-chave (`q`) em `/casos`
 
-Percebi que você já criou a rota e o método no controller para buscar o agente responsável por um caso:
+Você implementou o filtro básico por `q` no controller de casos:
 
 ```js
-// rota
-router.get("/:id/agente", casosController.getAgenteDoCaso);
+if (q) {
+  const query = q.toLowerCase();
+  casos = casos.filter(
+    (c) =>
+      c.titulo.toLowerCase().includes(query) ||
+      c.descricao.toLowerCase().includes(query)
+  );
+}
+```
 
-// controller
+No entanto, percebi que o teste de busca por palavra-chave não passou, o que pode indicar que o filtro não está funcionando corretamente em todos os casos esperados. 
+
+**Possível causa raiz:**  
+- O filtro está correto, mas pode faltar validação para o parâmetro `q` (ex: verificar se é string válida).  
+- Ou o filtro está sendo ignorado em algum momento (ex: uso incorreto do parâmetro na rota ou no controller).  
+
+**Sugestão:**  
+Adicione uma validação para garantir que `q` seja uma string não vazia e retorne erro 400 caso contrário. Por exemplo:
+
+```js
+if (q !== undefined) {
+  if (typeof q !== "string" || !q.trim()) {
+    return errorResponse(res, 400, "Parâmetro de busca inválido", [
+      { field: "q", message: "Parâmetro de busca inválido" },
+    ]);
+  }
+  const query = q.toLowerCase();
+  casos = casos.filter(
+    (c) =>
+      c.titulo.toLowerCase().includes(query) ||
+      c.descricao.toLowerCase().includes(query)
+  );
+}
+```
+
+Isso garante que o filtro só será aplicado quando o parâmetro for válido, alinhando-se à especificação Swagger.
+
+📚 Recomendo o vídeo sobre [Validação de Dados em APIs Node.js/Express](https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_) para aprofundar como validar e tratar esses parâmetros.
+
+---
+
+### 2. Endpoint `/casos/:id/agente` - Buscar agente responsável por um caso
+
+Você implementou o endpoint no controller e na rota:
+
+```js
+router.get("/:id/agente", casosController.getAgenteDoCaso);
+```
+
+E o controller:
+
+```js
 function getAgenteDoCaso(req, res) {
   const { id } = req.params;
   if (!uuidValidate(id)) {
@@ -52,91 +95,33 @@ function getAgenteDoCaso(req, res) {
 }
 ```
 
-**Isso está ótimo!** Porém, percebi que o teste relacionado a esse endpoint não passou. Isso pode indicar que, embora o código esteja escrito, talvez o roteamento ou exportação/importação da rota `casosRoutes.js` esteja com algum detalhe que impede o funcionamento correto.
+Porém, vi que esse endpoint não passou no teste de bônus, o que pode indicar que:
 
-**Sugestão:** Verifique se o arquivo `casosRoutes.js` está mesmo sendo importado e usado pelo `server.js`, o que pelo seu código parece estar correto:
+- O endpoint não está sendo corretamente reconhecido (ex: rota mal configurada ou conflito de rotas).  
+- Ou o retorno pode estar faltando algum detalhe esperado pelo teste, como status code ou formato do JSON.  
 
-```js
-import casosRouter from "./routes/casosRoutes.js";
-app.use("/casos", casosRouter);
-```
+**Dica:**  
+Confirme se o arquivo `casosRoutes.js` está exportando corretamente o router e que não há conflitos de rota (por exemplo, entre `/casos/:id` e `/casos/:id/agente`). A ordem das rotas pode impactar isso — rotas mais específicas devem vir antes das mais genéricas para o Express não "engolir" a requisição.
 
-Se isso está certo, confira se o método `getAgenteDoCaso` está corretamente exportado e importado, o que também parece estar:
-
-```js
-export default {
-  // ...
-  getAgenteDoCaso,
-};
-```
-
-E no `casosRoutes.js`:
+Exemplo da ordem correta:
 
 ```js
-import casosController from "../controllers/casosController.js";
 router.get("/:id/agente", casosController.getAgenteDoCaso);
+router.get("/:id", casosController.getCasoById);
 ```
 
-Então, a falha pode estar relacionada a algum detalhe no teste ou no tratamento do ID. Confirme se o ID usado nas requisições é um UUID válido e que o caso existe na memória no momento da requisição.
+Se já está assim, verifique também se o `findAgenteById` está funcionando corretamente com o `agente_id` do caso.
+
+📚 Para entender melhor o roteamento no Express, veja a documentação oficial:  
+https://expressjs.com/pt-br/guide/routing.html
 
 ---
 
-### 2. Filtro de busca por palavra-chave (`q`) nos casos
+### 3. Filtros complexos em `/agentes`: data de incorporação com ordenação ascendente e descendente
 
-No controller de casos, você implementou o filtro por query param `q` que busca em título e descrição:
-
-```js
-if (q) {
-  const query = q.toLowerCase();
-  casos = casos.filter(
-    (c) =>
-      c.titulo.toLowerCase().includes(query) ||
-      c.descricao.toLowerCase().includes(query)
-  );
-}
-```
-
-Isso está correto e muito bem feito! Porém, percebi que o teste bônus para esse filtro não passou. Isso pode indicar que, apesar da lógica estar implementada, o parâmetro `q` pode não estar sendo documentado no Swagger, ou talvez a rota `/casos` não esteja tratando corretamente o parâmetro.
-
-**Dica:** Para garantir que o Swagger reflita esse filtro, vale a pena adicionar o parâmetro na documentação, assim:
-
-```yaml
- * /casos:
- *   get:
- *     summary: Lista todos os casos registrados
- *     tags: [Casos]
- *     parameters:
- *       - in: query
- *         name: q
- *         schema:
- *           type: string
- *         description: Palavra-chave para busca em título e descrição
- *     responses:
- *       200:
- *         description: Lista de casos
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Caso'
-```
-
-Isso ajuda a deixar claro para quem consome a API que esse parâmetro existe.
-
----
-
-### 3. Filtragem complexa e ordenação para agentes por data de incorporação
-
-Você implementou filtros e ordenação por `dataDeIncorporacao` no controller de agentes:
+Você implementou o filtro e ordenação no controller de agentes:
 
 ```js
-const { dataDeIncorporacao, sort, cargo } = req.query;
-if (cargo) {
-  agentes = agentes.filter(
-    (agente) => agente.cargo.toLowerCase() === cargo.toLowerCase()
-  );
-}
 if (dataDeIncorporacao) {
   agentes = agentes.filter(
     (a) => new Date(a.dataDeIncorporacao) >= new Date(dataDeIncorporacao)
@@ -159,101 +144,155 @@ if (sort === "asc") {
 }
 ```
 
-A lógica está correta! Mas o teste bônus para essa funcionalidade não passou. Isso pode indicar que o parâmetro `dataDeIncorporacao` e o `sort` não estão documentados no Swagger para o endpoint `/agentes`.
+Porém, os testes bônus relacionados não passaram, o que pode indicar que:
 
-**Sugestão:** Acrescente na documentação Swagger dos agentes esses parâmetros de query, assim:
+- Falta validação dos parâmetros `dataDeIncorporacao` e `sort` para garantir que estejam no formato esperado (ex: data válida, sort só "asc" ou "desc").  
+- Ou falta tratamento de erros para parâmetros inválidos, retornando status 400 com mensagens claras.  
 
-```yaml
- * /agentes:
- *   get:
- *     summary: Lista todos os agentes
- *     tags: [Agentes]
- *     parameters:
- *       - in: query
- *         name: dataDeIncorporacao
- *         schema:
- *           type: string
- *           format: date
- *         description: Filtra agentes com data de incorporação igual ou posterior a esta data (YYYY-MM-DD)
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *           enum: [asc, desc]
- *         description: Ordena agentes pela data de incorporação em ordem ascendente ou descendente
- *       - in: query
- *         name: cargo
- *         schema:
- *           type: string
- *         description: Filtra agentes pelo cargo
- *     responses:
- *       200:
- *         description: Lista de agentes
-```
-
-Além disso, confira se a validação da data está robusta e se o formato esperado está claro para quem consome a API.
-
----
-
-### 4. Mensagens de erro customizadas para argumentos inválidos em casos
-
-Você implementou muito bem as mensagens de erro customizadas para agentes, mas para casos, apesar de ter validações e mensagens, o teste bônus para mensagens customizadas falhou.
-
-Isso pode indicar que:
-
-- A estrutura do corpo de erro para casos não está seguindo o padrão esperado (por exemplo, nomes de campos ou formato do array de erros).
-
-- Ou que algumas validações específicas não estão cobrindo todos os casos de erro.
-
-**Exemplo do seu código para erros em `createCaso`:**
+**Sugestão:**  
+Implemente validação para esses parâmetros antes de aplicar o filtro e a ordenação, por exemplo:
 
 ```js
 const errors = [];
-if (!titulo)
-  errors.push({ field: "titulo", message: "Campo 'titulo' é obrigatório" });
-// ... outros erros
+
+if (dataDeIncorporacao !== undefined) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataDeIncorporacao)) {
+    errors.push({
+      field: "dataDeIncorporacao",
+      message: "Campo dataDeIncorporacao deve seguir a formatação 'YYYY-MM-DD'",
+    });
+  }
+}
+
+if (sort !== undefined && !["asc", "desc"].includes(sort)) {
+  errors.push({
+    field: "sort",
+    message: "Parâmetro sort deve ser 'asc' ou 'desc'",
+  });
+}
+
 if (errors.length) {
   return errorResponse(res, 400, "Parâmetros inválidos", errors);
 }
 ```
 
-Isso está correto, mas sugiro revisar se o formato do array `errors` está consistente em todos os métodos (`create`, `update`, `patch`) e se o middleware `errorResponse` está tratando esse array adequadamente.
+Assim, você garante que a API responde com erros claros para parâmetros inválidos, conforme esperado.
+
+📚 Recomendo o vídeo sobre [Manipulação de Requisições e Respostas e Status Codes](https://youtu.be/RSZHvQomeKE) para entender melhor como validar query params e retornar status adequados.
 
 ---
 
-## 📚 Recomendações de estudo para você continuar brilhando
+### 4. Mensagens de erro para parâmetros inválidos em `/casos`
 
-- Para garantir que seus endpoints estejam bem documentados e que os parâmetros de query sejam reconhecidos, revise a documentação do Swagger e como adicionar parâmetros de query:  
-  https://swagger.io/docs/specification/describing-parameters/
+Você implementou mensagens customizadas para erros de agente inválido, o que foi muito bom! Porém, o teste bônus indica que as mensagens customizadas para argumentos inválidos de casos ainda não foram completamente implementadas.
 
-- Para entender melhor sobre validação de dados e tratamento de erros personalizados em APIs Express.js, recomendo este vídeo que explica como validar e responder com mensagens claras:  
+No seu controller de casos, o tratamento de erros está assim:
+
+```js
+if (errors.length) {
+  return errorResponse(res, 400, "Parâmetros inválidos", errors);
+}
+```
+
+Mas o Swagger indica que o corpo do erro deve conter um array `errors` com objetos detalhando o campo e a mensagem, por exemplo:
+
+```json
+{
+  "status": 400,
+  "message": "Parâmetros inválidos",
+  "errors": [
+    { "field": "titulo", "message": "Campo 'titulo' é obrigatório" }
+  ]
+}
+```
+
+**Análise:**  
+No seu `createCaso` e outros métodos, você está construindo o array de erros, mas em alguns pontos os campos do objeto de erro estão inconsistentes, como por exemplo:
+
+```js
+errors.push({ titulo: "Campo 'titulo' é obrigatório" });
+```
+
+Ou
+
+```js
+errors.push({ nome: "Campo 'nome' é obrigatório" });
+```
+
+Enquanto o esperado é:
+
+```js
+errors.push({ field: "titulo", message: "Campo 'titulo' é obrigatório" });
+```
+
+**Solução:**  
+Padronize sempre o formato dos erros para `{ field: string, message: string }`. Isso garante que o frontend ou cliente da API receba respostas consistentes e fáceis de tratar.
+
+Exemplo corrigido:
+
+```js
+if (!titulo)
+  errors.push({ field: "titulo", message: "Campo 'titulo' é obrigatório" });
+```
+
+📚 Para entender melhor como construir respostas de erro customizadas e padronizadas, veja o artigo do MDN:  
+https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/400
+
+---
+
+## 💡 Dicas Extras para Você Brilhar Ainda Mais
+
+- No seu `agentesController.js`, no método `createAgente`, você tem:
+
+```js
+if (!nome) errors.push({ nome: "Campo 'nome' é obrigatório" });
+```
+
+Recomendo mudar para:
+
+```js
+if (!nome) errors.push({ field: "nome", message: "Campo 'nome' é obrigatório" });
+```
+
+Assim, mantém o padrão em toda a API, facilitando o consumo e a manutenção.
+
+- Nos endpoints PATCH, você está validando os campos atualizados, o que é excelente! Continue assim, pois isso evita bugs e mantém a integridade dos dados.
+
+- Verifique a ordem das rotas no arquivo `casosRoutes.js`, pois rotas dinâmicas podem conflitar. A rota `/casos/:id/agente` deve vir antes de `/casos/:id`.
+
+---
+
+## 📚 Recursos Recomendados para Você
+
+- Para fortalecer sua base em **Express.js e roteamento**:  
+  https://expressjs.com/pt-br/guide/routing.html  
+  https://youtu.be/RSZHvQomeKE
+
+- Para aprimorar **validação e tratamento de erros** em APIs:  
+  https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Status/400  
   https://youtu.be/yNDCRAz7CM8?si=Lh5u3j27j_a4w3A_
 
-- Para aprofundar na arquitetura MVC e organização de projetos Node.js/Express, que é fundamental para manter seu código limpo e escalável:  
-  https://youtu.be/bGN_xNc4A1k?si=Nj38J_8RpgsdQ-QH
-
-- Para manipular arrays e filtros em JavaScript com mais eficiência, este vídeo é excelente:  
-  https://youtu.be/glSgUKA5LjE?si=t9G2NsC8InYAU9cI
+- Para entender melhor a manipulação de query params e status codes:  
+  https://youtu.be/RSZHvQomeKE  
+  https://youtu.be/--TQwiNIw28
 
 ---
 
-## 🛠️ Resumo dos principais pontos para focar agora
+## 📝 Resumo dos Principais Pontos para Focar
 
-- **Confirme o funcionamento do endpoint `/casos/:id/agente`**: verifique se a rota está ativa, o método exportado/importado corretamente e se o ID passado é válido e existe na memória.
-
-- **Documente no Swagger os parâmetros de query `q` para casos e `dataDeIncorporacao`, `sort` e `cargo` para agentes**, para que o cliente da API saiba como usar esses filtros.
-
-- **Revise o formato das mensagens de erro para casos**, garantindo que estejam consistentes e personalizadas em todos os métodos (create, update, patch).
-
-- **Teste manualmente os filtros e ordenações para agentes e casos**, garantindo que as query strings estejam funcionando como esperado.
+- **Padronizar o formato dos erros** no array `errors` para `{ field, message }` em toda a API.  
+- **Validar e tratar corretamente os parâmetros de query `q`, `dataDeIncorporacao` e `sort`**, retornando erros 400 com mensagens claras para parâmetros inválidos.  
+- **Garantir a ordem correta das rotas** no arquivo `casosRoutes.js` para que `/casos/:id/agente` não seja "engolida" pela rota `/casos/:id`.  
+- **Revisar e testar o filtro por palavra-chave (`q`) em casos**, incluindo validação do parâmetro.  
+- **Melhorar as mensagens de erro customizadas para casos**, especialmente para parâmetros inválidos, seguindo o padrão esperado.  
 
 ---
 
-Igor, você está no caminho certo e já entregou uma API muito bem estruturada e funcional! 🚓💨 Com esses ajustes, sua aplicação vai ficar ainda mais completa e profissional. Continue explorando, testando e aprimorando seu código — a prática leva à perfeição! Estou aqui torcendo pelo seu sucesso! 🎯💙
+Igor, você está no caminho certo e já entregou uma base muito sólida para essa API! Com esses ajustes, sua aplicação vai ficar ainda mais robusta e alinhada com as melhores práticas. Continue explorando e aprimorando seu código — a jornada do desenvolvimento é feita de pequenos passos assim! 🚀💙
 
-Se precisar, volte a estudar os recursos que indiquei e não hesite em perguntar. Você está mandando muito bem! 👏🚀
+Se precisar de ajuda para entender algum conceito, não hesite em voltar aqui, vou adorar ajudar! 😉
 
-Um abraço do seu Code Buddy! 🤖💬
+Um grande abraço e sucesso no seu código! 👊✨
 
 > Caso queira tirar uma dúvida específica, entre em contato com o Chapter no nosso [discord](https://discord.gg/DryuHVnz).
 
