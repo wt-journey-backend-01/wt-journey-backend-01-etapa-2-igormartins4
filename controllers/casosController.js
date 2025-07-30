@@ -95,13 +95,25 @@ function updateCaso(req, res) {
   if (!titulo)
     errors.push({ field: "titulo", message: "Campo 'titulo' é obrigatório" });
   if (!descricao)
-    errors.push({ field: "descricao", message: "Campo 'descricao' é obrigatório" });
+    errors.push({
+      field: "descricao",
+      message: "Campo 'descricao' é obrigatório",
+    });
   if (!status || !["aberto", "solucionado"].includes(status))
-    errors.push({ field: "status", message: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'" });
+    errors.push({
+      field: "status",
+      message: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'",
+    });
   if (!agente_id)
-    errors.push({ field: "agente_id", message: "Campo 'agente_id' é obrigatório" });
+    errors.push({
+      field: "agente_id",
+      message: "Campo 'agente_id' é obrigatório",
+    });
   if (agente_id && !uuidValidate(agente_id)) {
-    errors.push({ field: "agente_id", message: "agente_id deve ser um UUID válido" });
+    errors.push({
+      field: "agente_id",
+      message: "agente_id deve ser um UUID válido",
+    });
   }
   if (errors.length) {
     return errorResponse(res, 400, "Parâmetros inválidos", errors);
@@ -109,7 +121,11 @@ function updateCaso(req, res) {
   if (agente_id && uuidValidate(agente_id)) {
     const agenteExiste = findAgenteById(agente_id);
     if (!agenteExiste) {
-      return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+      return errorResponse(
+        res,
+        404,
+        "Agente não encontrado para o agente_id fornecido"
+      );
     }
   }
   caso.titulo = titulo;
@@ -135,14 +151,23 @@ function patchCaso(req, res) {
   if (titulo !== undefined && (typeof titulo !== "string" || !titulo.trim())) {
     errors.push({ field: "titulo", message: "Campo 'titulo' inválido" });
   }
-  if (descricao !== undefined && (typeof descricao !== "string" || !descricao.trim())) {
+  if (
+    descricao !== undefined &&
+    (typeof descricao !== "string" || !descricao.trim())
+  ) {
     errors.push({ field: "descricao", message: "Campo 'descricao' inválido" });
   }
   if (status !== undefined && !["aberto", "solucionado"].includes(status)) {
-    errors.push({ field: "status", message: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'" });
+    errors.push({
+      field: "status",
+      message: "O campo 'status' pode ser somente 'aberto' ou 'solucionado'",
+    });
   }
   if (agente_id !== undefined && !uuidValidate(agente_id)) {
-    errors.push({ field: "agente_id", message: "agente_id deve ser um UUID válido" });
+    errors.push({
+      field: "agente_id",
+      message: "agente_id deve ser um UUID válido",
+    });
   }
   if (errors.length) {
     return errorResponse(res, 400, "Parâmetros inválidos", errors);
@@ -153,7 +178,11 @@ function patchCaso(req, res) {
   if (agente_id !== undefined) {
     const agenteExiste = findAgenteById(agente_id);
     if (!agenteExiste) {
-      return errorResponse(res, 404, "Agente não encontrado para o agente_id fornecido");
+      return errorResponse(
+        res,
+        404,
+        "Agente não encontrado para o agente_id fornecido"
+      );
     }
     caso.agente_id = agente_id;
   }

@@ -6,11 +6,13 @@ import setupSwagger from "./docs/swagger.js";
 const app = express();
 const PORT = 3000;
 
-
 app.use(json());
 
 app.get("/", (req, res) => {
-  res.json({ message: "API do Departamento de Polícia ativa. Consulte /docs para documentação." });
+  res.json({
+    message:
+      "API do Departamento de Polícia ativa. Consulte /docs para documentação.",
+  });
 });
 
 setupSwagger(app);
